@@ -126,6 +126,15 @@ h1 { margin: 2px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.01em;
 .panel .reset { margin-top: 8px; color: var(--primary); font-weight: 700; font-size: 13px; }
 .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); transform: translateX(-50%); background: #151a2d; color: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 40; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .toast.show { opacity: 1; }
+.item.row{position:relative}.ia{display:flex;gap:12px;flex:1;min-width:0;padding-right:34px}
+.star{position:absolute;top:10px;right:0;width:34px;height:34px;border-radius:50%;font-size:18px;color:var(--hint);z-index:2}
+.star.on{color:#f5a623}.m .star{top:auto;bottom:6px;right:6px;background:rgba(0,0,0,.45);color:#fff}.m .star.on{color:#ffc94d}
+.m span{padding-right:44px}.m{cursor:pointer}
+.pill.r{background:rgba(216,59,59,.16);color:#d83b3b}
+.lbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.lbar button{padding:8px 14px;border-radius:14px;background:var(--soft);font-weight:700;font-size:13px}
+.addrow{display:flex;gap:8px;margin-top:12px}.addrow input{flex:1;min-width:0;padding:10px 13px;border-radius:14px;border:0;background:var(--soft);font-size:16px}
+.opt{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:14px;background:var(--soft);font-weight:700;margin-top:8px}
+.sl{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;font-weight:600;font-size:13px}
 </style>
 </head>
 <body>
@@ -135,7 +144,7 @@ h1 { margin: 2px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.01em;
       <div class="cap1">Научпоп-поиск</div>
       <h1>Что ищем?</h1>
     </div>
-    <button class="round" id="gear" type="button" aria-label="Настройки">⚙️</button>
+    <div style="display:flex;gap:8px"><button class="round" id="libbtn" type="button" aria-label="Моё">⭐</button><button class="round" id="gear" type="button" aria-label="Настройки">⚙️</button></div>
   </div>
 
   <form id="form" class="searchbox" autocomplete="off">
@@ -194,6 +203,7 @@ h1 { margin: 2px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.01em;
   </div>
 </div>
 
+<div class="sheet" id="savesheet"><div class="panel"><h3>Сохранить в подборку</h3><div id="saveopts"></div><div class="addrow"><input id="newcol" placeholder="Новая подборка"><button class="go" id="addcol" type="button">＋</button></div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -229,6 +239,9 @@ ourworldindata.org Our World in Data`;
 let cfg = Object.assign({ pixabay: '', pexels: '', lang: 'ru', off: {}, sitesOff: {}, sites: DEFAULT_SITES, freeOnly: true, reviewsOnly: false }, store.get('cfg', {}));
 let recent = store.get('recent', []);
 let tab = 'info', sid = 0, current = [], ctx = { q: '', en: '' }, vtok = 0, viewerItem = null;
+let lib = store.get('lib', null) || { cols: [{ id: 'c0', n: 'Без темы' }], items: [] };
+let libCol = 'all', libQuery = '', pendingKey = null;
+const reg = {};
 
 const enc = encodeURIComponent;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -303,7 +316,7 @@ const SOURCES = {
         const seen = {}, badges = [];
         (r.pubtype || []).forEach(t => { if (PT[t] && !seen[PT[t][0]]) { seen[PT[t][0]] = 1; badges.push(PT[t]); } });
         return { title: strip(r.title), text: [(r.authors || []).slice(0, 3).map(a => a.name).join(', '), r.source].filter(Boolean).join(' · '), badges, year: (r.pubdate || '').slice(0, 4), url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, meta: 'pubmed.ncbi.nlm.nih.gov' };
-      });
+      }).sort((a, b) => lvl(a) - lvl(b));
     } },
     { id: 'epmc', label: 'Europe PMC', ico: '📚', t: '#12a594', run: async (q, en) => {
       const query = `(${en}) AND OPEN_ACCESS:y AND (SRC:MED OR SRC:PMC)`;
@@ -365,19 +378,104 @@ const LINKS = {
   video: en => [['Pexels', `https://www.pexels.com/search/videos/${enc(en)}/`], ['Pixabay', `https://pixabay.com/videos/search/${enc(en)}/`], ['Mixkit', `https://mixkit.co/free-stock-video/${slug(en)}/`], ['Coverr', `https://coverr.co/s?q=${enc(en)}`]]
 };
 
+/* ---------- Подборки, экспорт, надёжность, журнал ---------- */
+const inLib = k => lib.items.some(i => i.k === k);
+const starBtn = k => `<button type="button" class="star ${inLib(k) ? 'on' : ''}" data-k="${esc(k)}" aria-label="В подборку">${inLib(k) ? '★' : '☆'}</button>`;
+const regm = it => { const k = it.page || it.full || it.embed; it.k = k; reg[k] = it; return k; };
+const lvl = it => (it.badges || []).some(b => b[1] === 'g') ? 0 : (it.badges || []).some(b => b[0] === 'РКИ') ? 1 : (it.badges || []).length ? 2 : 3;
+const keyless = () => { const q = ctx.en || ctx.q, e = enc(q); return `<section class="card grad"><div class="sh"><span class="ico">🎬</span><h2>Pexels и Pixabay без ключей</h2></div><p class="gp">Без ключа их выдачу не встроить в апп. Открой поиск, выбери ролик и добавь его в «Моё» по ссылке (⭐ вверху).</p><a class="bigbtn" data-ext href="https://www.pexels.com/search/videos/${e}/">Pexels: ${esc(q)}</a><a class="bigbtn" data-ext href="https://pixabay.com/videos/search/${e}/">Pixabay: ${esc(q)}</a></section>`; };
+
+function saveLib() {
+  store.set('lib', lib);
+  const cs = tg && tg.CloudStorage; if (!cs) return;
+  try { const j = JSON.stringify(lib), n = Math.ceil(j.length / 3500);
+    for (let i = 0; i < n; i++) cs.setItem('lib' + i, j.slice(i * 3500, (i + 1) * 3500));
+    cs.setItem('libn', String(n)); } catch (e) {}
+}
+function restoreLib() {
+  const cs = tg && tg.CloudStorage;
+  if (store.get('lib', null) || !cs) return;
+  cs.getItem('libn', (e, n) => { n = +n; if (!n) return; const ks = Array.from({ length: n }, (_, i) => 'lib' + i);
+    cs.getItems(ks, (e2, v) => { try { lib = JSON.parse(ks.map(k => v[k]).join('')); store.set('lib', lib); if (tab === 'lib') renderLib(); } catch (x) {} }); });
+}
+function refreshStars() { document.querySelectorAll('.star').forEach(b => { const on = inLib(b.dataset.k); b.classList.toggle('on', on); b.textContent = on ? '★' : '☆'; }); }
+function toggleStar(k) {
+  if (inLib(k)) { lib.items = lib.items.filter(i => i.k !== k); saveLib(); refreshStars(); if (tab === 'lib') renderLib(); return; }
+  pendingKey = k;
+  $('#saveopts').innerHTML = lib.cols.map(c => `<button type="button" class="opt" data-c="${c.id}">${esc(c.n)}</button>`).join('');
+  $('#savesheet').classList.add('open');
+}
+function addTo(cid) {
+  const it = reg[pendingKey]; if (!it) return;
+  lib.items.unshift(Object.assign({}, it, { k: pendingKey, col: cid, url: it.url || it.page, kind: it.type ? (it.type === 'image' ? 'image' : 'video') : 'info', added: Date.now() }));
+  saveLib(); $('#savesheet').classList.remove('open'); refreshStars(); toast('Сохранено');
+}
+function exportText(fmt) {
+  const its = lib.items.filter(i => libCol === 'all' || i.col === libCol);
+  if (fmt === 'desc') return 'Источники:\n' + its.map(i => `• ${i.title}${i.lic ? ' (' + i.meta + ', ' + i.lic + ')' : ''} — ${i.url}`).join('\n');
+  const ref = i => [i.text, i.year && `(${i.year})`, i.title, i.meta, i.lic && 'Лицензия: ' + i.lic, i.url].filter(Boolean).join('. ');
+  return [['Исследования и статьи', 'info'], ['Видео', 'video'], ['Изображения', 'image']].filter(([, k]) => its.some(i => i.kind === k))
+    .map(([n, k]) => n + ':\n' + its.filter(i => i.kind === k).map((i, j) => `${j + 1}. ${ref(i)}`).join('\n')).join('\n\n');
+}
+async function checkRetractions() {
+  const m = i => ((i.url || '').match(/pubmed\.ncbi\.nlm\.nih\.gov\/(\d+)/) || [])[1];
+  const ids = lib.items.map(m).filter(Boolean);
+  if (!ids.length) return toast('Нет статей из PubMed');
+  toast('Проверяю…');
+  try {
+    const d = await getJSON(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
+    let n = 0;
+    lib.items.forEach(i => { const r = d.result[m(i)]; if (r) { i.retracted = (r.pubtype || []).includes('Retracted Publication'); if (i.retracted) n++; } });
+    saveLib(); renderLib(); toast(n ? 'Отозвано: ' + n : 'Отозванных нет');
+  } catch (e) { toast('Не удалось проверить'); }
+}
+function addByUrl() {
+  const u = ($('#addurl').value || '').trim();
+  if (!/^https?:\/\//i.test(u)) return toast('Нужна ссылка');
+  const host = new URL(u).hostname.replace(/^www\./, '');
+  let t = u.split('?')[0].split('/').filter(Boolean).pop() || host;
+  try { t = decodeURIComponent(t); } catch (e) {}
+  t = t.replace(/-\d+$/, '').replace(/[-_]/g, ' ');
+  const stock = /pexels|pixabay|mixkit|coverr/.test(host);
+  if (!inLib(u)) lib.items.unshift({ k: u, url: u, title: t, meta: host, lic: stock ? host.split('.')[0].replace(/^./, c => c.toUpperCase()) : '', kind: stock || /video/.test(u) ? 'video' : 'info', col: libCol === 'all' ? lib.cols[0].id : libCol, added: Date.now() });
+  saveLib(); renderLib();
+}
+function libAction(el) {
+  const a = el.dataset.la, v = el.dataset.v;
+  if (a === 'col') { libCol = v; renderLib(); }
+  else if (a === 'exp') copyText(exportText(v));
+  else if (a === 'share') { const u = 'https://t.me/share/url?url=%20&text=' + enc(exportText('refs').slice(0, 3500)); (tg && tg.openTelegramLink) ? tg.openTelegramLink(u) : openLink(u); }
+  else if (a === 'retr') checkRetractions();
+  else if (a === 'addurl') addByUrl();
+  else if (a === 'used') { const it = lib.items.find(i => i.k === el.dataset.k); if (it) { it.used = !it.used; saveLib(); renderLib(); } }
+}
+function renderLib() {
+  const qf = libQuery.toLowerCase();
+  const items = lib.items.filter(i => (libCol === 'all' || i.col === libCol) && (!qf || (i.title + ' ' + (i.meta || '')).toLowerCase().includes(qf)));
+  const head = `<section class="card"><div class="sh"><span class="ico" style="--t:#f5a623">⭐</span><h2>Моё</h2></div>
+    <div class="chips" style="padding:10px 0 0"><button type="button" class="chip ${libCol === 'all' ? 'on' : ''}" data-la="col" data-v="all">Все</button>${lib.cols.map(c => `<button type="button" class="chip ${libCol === c.id ? 'on' : ''}" data-la="col" data-v="${c.id}">${esc(c.n)}</button>`).join('')}</div>
+    <div class="lbar"><button type="button" data-la="exp" data-v="refs">Список источников</button><button type="button" data-la="exp" data-v="desc">Для описания видео</button><button type="button" data-la="share">В Telegram</button><button type="button" data-la="retr">Проверить отзывы</button></div>
+    <div class="addrow"><input id="addurl" placeholder="Ссылка на ролик или статью"><button class="go" type="button" data-la="addurl">＋</button></div>
+    <p class="err">Строка поиска фильтрует подборку. ★ убирает запись, «Использовано» ведёт журнал лицензий.</p></section>`;
+  const list = items.length ? `<section class="card"><div class="body">${items.map(i => itemHTML(i) + `<div class="lbar" style="margin:0 0 8px"><button type="button" data-la="used" data-k="${esc(i.k)}">${i.used ? '✓ Использовано' : 'Отметить как использованное'}</button></div>`).join('')}</div></section>` : '<div class="card"><p class="note">Пока пусто. Тапни ☆ у статьи, картинки или видео.</p></div>';
+  $('#results').innerHTML = head + list;
+}
+
 /* ---------- Интерфейс ---------- */
 function renderChips() {
-  let h = SOURCES[tab].map(s => {
+  let h = (SOURCES[tab] || []).map(s => {
     const locked = s.key && !cfg[s.key];
     const on = !locked && !cfg.off[s.id];
     return `<button type="button" class="chip ${on ? 'on' : ''} ${locked ? 'lock' : ''}" data-id="${s.id}">${locked ? '🔒 ' : ''}${s.label}</button>`;
   }).join('');
-  if (tab === 'info') h += `<button type="button" class="chip tog ${cfg.reviewsOnly ? 'on' : ''}" data-t="reviewsOnly">Только обзоры (PubMed)</button>`;
+  if (tab === 'lib') h = '';
+  else if (tab === 'info') h += `<button type="button" class="chip tog ${cfg.reviewsOnly ? 'on' : ''}" data-t="reviewsOnly">Только обзоры (PubMed)</button>`;
   else h += `<button type="button" class="chip tog ${cfg.freeOnly ? 'on' : ''}" data-t="freeOnly">Свободные лицензии</button>`;
   $('#chips').innerHTML = h;
 }
 
 function renderHome() {
+  if (tab === 'lib') return renderLib();
   const tips = {
     info: ['Научные базы понимают английский', 'Пиши по-русски: запрос сам переведётся для PubMed и Europe PMC. Перевод можно поправить под строкой поиска.'],
     image: ['Ищи по сути кадра', 'Короткие запросы работают лучше длинных: «микроскоп», «клетки крови», «вакцинация».'],
@@ -397,6 +495,7 @@ function sitesHTML() {
     <p class="gp">Отметь, где искать. Запрос откроется в Google только по этим сайтам.</p>
     <div class="sitechips">${sites.map(s => `<button type="button" class="sc ${cfg.sitesOff[s.d] ? '' : 'on'}" data-d="${esc(s.d)}">${esc(s.n)}</button>`).join('')}</div>
     <a class="bigbtn" data-ext href="${g ? esc('https://www.google.com/search?q=' + enc(g)) : '#'}">Искать на ${on.length} сайтах</a>
+    <p class="gp" style="margin:12px 0 6px">Сверить по одному:</p><div class="sitechips">${on.slice(0, 8).map(s => `<a class="sl" data-ext href="${esc('https://www.google.com/search?q=' + enc('site:' + s.d + ' ' + q))}">${esc(s.n.split(' ')[0])} ↗</a>`).join('')}</div>
   </section>`;
 }
 
@@ -405,14 +504,15 @@ function linksBlock() {
 }
 
 function itemHTML(it) {
-  const pills = (it.badges || []).map(b => `<span class="pill ${b[1]}">${esc(b[0])}</span>`).join('') + (it.year ? `<span class="pill">${esc(it.year)}</span>` : '');
-  return `<a class="item" data-ext href="${safe(it.url)}">${it.thumb ? `<img loading="lazy" src="${safe(it.thumb)}" alt="">` : ''}<div class="ib"><b>${esc(it.title)}</b>${it.text ? `<p>${esc(it.text)}</p>` : ''}<div class="pills">${pills}<span class="src">${esc(it.meta || '')}</span></div></div></a>`;
+  const pills = (it.retracted ? '<span class="pill r">Отозвана</span>' : '') + (it.used ? '<span class="pill t">Использовано</span>' : '') + (it.badges || []).map(b => `<span class="pill ${b[1]}">${esc(b[0])}</span>`).join('') + (it.year ? `<span class="pill">${esc(it.year)}</span>` : '');
+  reg[it.url] = it;
+  return `<div class="item row"><a class="ia" data-ext href="${safe(it.url)}">${it.thumb ? `<img loading="lazy" src="${safe(it.thumb)}" alt="">` : ''}<div class="ib"><b>${esc(it.title)}</b>${it.text ? `<p>${esc(it.text)}</p>` : ''}<div class="pills">${pills}<span class="src">${esc(it.meta || '')}</span></div></div></a>${starBtn(it.url)}</div>`;
 }
 
 function renderMedia(pending, errs) {
-  let html = '';
+  let html = tab === 'video' && (!cfg.pexels || !cfg.pixabay) ? keyless() : '';
   if (current.length) {
-    html += `<div class="grid">${current.map((it, i) => `<button type="button" class="m" data-i="${i}"><img loading="lazy" src="${safe(it.thumb)}" alt="">${it.lic ? `<b class="lic">${esc(it.lic)}</b>` : ''}${it.type !== 'image' ? '<i class="play">▶</i>' : ''}<span>${esc(it.title)}</span></button>`).join('')}</div>`;
+    html += `<div class="grid">${current.map((it, i) => `<div class="m" data-i="${i}"><img loading="lazy" src="${safe(it.thumb)}" alt="">${it.lic ? `<b class="lic">${esc(it.lic)}</b>` : ''}${it.type !== 'image' ? '<i class="play">▶</i>' : ''}<span>${esc(it.title)}</span>${starBtn(regm(it))}</div>`).join('')}</div>`;
   }
   if (pending > 0) html += '<div class="spin">Ищу ещё…</div>';
   else if (!current.length) html += '<div class="card"><p class="note">Ничего не нашлось. Попробуй другие слова или включи другой источник.</p></div>';
@@ -423,6 +523,7 @@ function renderMedia(pending, errs) {
 
 async function search(q, enOverride) {
   q = (q || '').trim();
+  if (tab === 'lib') { libQuery = q; renderLib(); return; }
   if (!q) return;
   recent = [q, ...recent.filter(r => r !== q)].slice(0, 8);
   store.set('recent', recent);
@@ -545,6 +646,8 @@ $('#chips').addEventListener('click', e => {
 });
 
 $('#results').addEventListener('click', e => {
+  const st = e.target.closest('.star'); if (st) return toggleStar(st.dataset.k);
+  const la = e.target.closest('[data-la]'); if (la) return libAction(la);
   const m = e.target.closest('.m'); if (m) return openViewer(current[+m.dataset.i]);
   const r = e.target.closest('[data-r]'); if (r) { $('#q').value = r.dataset.r; search(r.dataset.r); return; }
   const sc = e.target.closest('.sc');
@@ -561,6 +664,10 @@ document.addEventListener('click', e => {
   e.preventDefault(); openLink(a.href);
 });
 
+$('#libbtn').addEventListener('click', () => { tab = 'lib'; sid++; document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', 'false')); renderChips(); renderLib(); });
+$('#savesheet').addEventListener('click', e => { if (e.target.id === 'savesheet') e.currentTarget.classList.remove('open'); const c = e.target.closest('[data-c]'); if (c) addTo(c.dataset.c); });
+$('#addcol').addEventListener('click', () => { const n = $('#newcol').value.trim(); if (!n) return; const id = 'c' + Date.now(); lib.cols.push({ id, n }); $('#newcol').value = ''; addTo(id); });
+restoreLib();
 renderChips();
 renderHome();
 </script>
