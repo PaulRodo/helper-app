@@ -3,339 +3,522 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Поиск</title>
+<title>Научпоп-поиск</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: var(--tg-theme-bg-color, #ffffff);
-  --text: var(--tg-theme-text-color, #1c1c1e);
-  --hint: var(--tg-theme-hint-color, #8a8a8e);
-  --link: var(--tg-theme-link-color, #2481cc);
-  --accent: var(--tg-theme-button-color, #2481cc);
-  --accent-text: var(--tg-theme-button-text-color, #ffffff);
-  --sec: var(--tg-theme-secondary-bg-color, #f1f1f4);
-  --line: color-mix(in srgb, var(--hint) 25%, transparent);
+  --bg1: #e3ebf6; --bg2: #d9ede8;
+  --card: #ffffff; --text: #151a2d; --hint: #7c829a; --line: #eaecf4; --soft: #eef0f8;
+  --primary: #6f55e6; --primary2: #a05fb8;
+  --shadow: 0 6px 24px rgba(40, 52, 100, .08);
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+[data-theme="dark"] {
+  --bg1: #141824; --bg2: #112021;
+  --card: #1d2233; --text: #eef0fa; --hint: #98a0bb; --line: #2a3048; --soft: #262c42;
+  --shadow: 0 6px 24px rgba(0, 0, 0, .35);
+}
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-body { min-height: 100vh; }
-button, input, select { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { color: var(--text); font: 500 15px/1.45 Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; min-height: 100vh; }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(135deg, var(--bg1), var(--bg2)); }
+button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; border: 0; background: none; }
 a { color: inherit; text-decoration: none; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding: 12px 14px 8px; border-bottom: 1px solid var(--line); }
-form { display: flex; gap: 8px; }
-.field { flex: 1; display: flex; align-items: center; background: var(--sec); border-radius: 12px; padding: 0 12px; }
-.field input { flex: 1; min-width: 0; border: 0; background: none; padding: 11px 0; outline: none; font-size: 16px; }
-.field input::placeholder { color: var(--hint); }
-.go { background: var(--accent); color: var(--accent-text); border-radius: 12px; padding: 0 16px; font-weight: 600; }
-.gear { width: 44px; border-radius: 12px; background: var(--sec); font-size: 18px; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 16px 14px 48px; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.cap1 { color: var(--hint); font-size: 13px; font-weight: 600; }
+h1 { margin: 2px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.01em; }
+.round { width: 42px; height: 42px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow); font-size: 18px; }
 
-.tabs { display: flex; gap: 4px; margin-top: 10px; background: var(--sec); padding: 3px; border-radius: 11px; }
-.tabs button { flex: 1; padding: 7px 0; border-radius: 9px; color: var(--hint); font-weight: 500; }
-.tabs button[aria-selected="true"] { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.searchbox { display: flex; gap: 8px; background: var(--card); border-radius: 22px; padding: 6px 6px 6px 18px; box-shadow: var(--shadow); }
+.searchbox input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font-size: 16px; font-weight: 600; }
+.searchbox input::placeholder { color: var(--hint); font-weight: 500; }
+.go { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; font-weight: 700; border-radius: 17px; padding: 0 20px; min-height: 44px; }
+.enrow { display: flex; align-items: center; gap: 10px; margin: 10px 6px 0; font-size: 13px; color: var(--hint); font-weight: 600; }
+.enrow input { flex: 1; min-width: 0; border: 0; border-bottom: 1px dashed var(--hint); background: none; padding: 4px 0; font-size: 16px; font-weight: 600; color: var(--text); outline: none; }
 
-.chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none; }
+.seg { display: flex; gap: 2px; margin-top: 14px; background: var(--soft); padding: 4px; border-radius: 16px; }
+.seg button { flex: 1; padding: 9px 0; border-radius: 12px; color: var(--hint); font-weight: 700; }
+.seg button[aria-selected="true"] { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(40, 52, 100, .12); }
+
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 12px 2px 2px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
-.chip { flex: none; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--hint); font-size: 14px; }
-.chip.on { background: color-mix(in srgb, var(--accent) 14%, transparent); border-color: var(--accent); color: var(--text); }
-.chip.lock { border-style: dashed; }
+.chip { flex: none; padding: 6px 13px; border-radius: 999px; background: var(--card); color: var(--hint); font-weight: 600; font-size: 14px; box-shadow: 0 1px 4px rgba(40, 52, 100, .06); }
+.chip.on { background: color-mix(in srgb, var(--primary) 16%, var(--card)); color: var(--primary); font-weight: 700; }
+.chip.lock { border: 1px dashed var(--hint); box-shadow: none; background: transparent; }
+.chip.tog { border: 1px solid var(--line); }
 
-main { padding: 6px 14px 40px; }
+.card { background: var(--card); border-radius: 26px; padding: 18px; margin-top: 14px; box-shadow: var(--shadow); }
+.card.tint { background: linear-gradient(160deg, color-mix(in srgb, var(--t) 18%, var(--card)), var(--card) 62%); }
+.card.grad { background: linear-gradient(135deg, #6f55e6 0%, #b05fa0 55%, #ef6a3c 100%); color: #fff; }
+.card.green { background: linear-gradient(135deg, #25b05f, #0f8a45); color: #fff; }
+.sh { display: flex; align-items: center; gap: 10px; }
+.sh h2 { margin: 0; font-size: 16px; font-weight: 700; }
+.ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--t, #6b7280); color: #fff; font-size: 15px; flex: none; }
+.grad .ico { background: rgba(255, 255, 255, .22); }
+.gp { margin: 8px 0 12px; font-size: 14px; opacity: .92; }
+.sitechips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc { padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .2); color: #fff; font-weight: 600; font-size: 13px; }
+.sc.on { background: #fff; color: #4a3bb0; font-weight: 700; }
+.bigbtn { display: block; text-align: center; margin-top: 14px; padding: 13px; border-radius: 16px; background: #fff; color: #4a3bb0; font-weight: 800; }
+
 .note, .spin { color: var(--hint); padding: 18px 2px; text-align: center; }
-.err { color: var(--hint); font-size: 14px; padding: 4px 0 10px; }
-.recent { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
-.recent button { background: var(--sec); border-radius: 999px; padding: 5px 12px; font-size: 14px; }
+.spin.white, .note.white { color: #fff; }
+.err { color: var(--hint); font-size: 14px; margin: 10px 0 0; }
+.tip h2 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+.tip p { margin: 0; font-size: 14px; opacity: .92; }
+.recent { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.recent button { background: var(--card); border-radius: 999px; padding: 6px 13px; font-size: 14px; font-weight: 600; box-shadow: 0 1px 4px rgba(40, 52, 100, .06); }
 
-section h2 { font-size: 15px; font-weight: 600; margin: 18px 0 6px; }
-.card { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.card img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex: none; background: var(--sec); }
-.card b { display: block; font-weight: 600; }
-.card p { margin: 2px 0 0; color: var(--hint); font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.card small { color: var(--link); font-size: 13px; }
+.item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.body .item:first-child { border-top: 0; padding-top: 6px; }
+.item img { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; flex: none; background: var(--soft); }
+.ib { min-width: 0; }
+.ib b { display: block; font-weight: 700; line-height: 1.3; }
+.ib p { margin: 3px 0 0; color: var(--hint); font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pills { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 7px; }
+.pill { padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--soft); color: var(--hint); }
+.pill.g { background: rgba(30, 166, 90, .16); color: #1a9a52; }
+.pill.b { background: rgba(42, 116, 192, .16); color: #2a74c0; }
+.pill.t { background: rgba(14, 143, 128, .16); color: #0e8f80; }
+.src { font-size: 12px; color: var(--hint); }
 
-.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding-top: 10px; }
-@media (min-width: 640px) { .grid { grid-template-columns: repeat(4, 1fr); } }
-.m { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--sec); padding: 0; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+.m { position: relative; aspect-ratio: 4/3; border-radius: 20px; overflow: hidden; background: var(--soft); padding: 0; box-shadow: var(--shadow); }
 .m img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.m span { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 6px; font-size: 12px; line-height: 1.25; color: #fff; text-align: left; background: linear-gradient(transparent, rgba(0,0,0,.65)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.m .play { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; display: grid; place-items: center; font-style: normal; }
+.m span { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px; font-size: 12px; line-height: 1.25; font-weight: 600; color: #fff; text-align: left; background: linear-gradient(transparent, rgba(0, 0, 0, .7)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.m .lic { position: absolute; top: 8px; left: 8px; padding: 2px 9px; border-radius: 999px; background: rgba(255, 255, 255, .92); color: #151a2d; font-size: 11px; font-weight: 800; max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m .play { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; display: grid; place-items: center; font-style: normal; }
 
-.links { padding: 18px 0 4px; color: var(--hint); font-size: 14px; }
-.links a { color: var(--link); margin-right: 12px; white-space: nowrap; }
+.links { color: var(--hint); font-size: 14px; font-weight: 600; }
+.links a { color: var(--primary); margin-right: 14px; white-space: nowrap; font-weight: 700; }
 
-.overlay { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.88); display: none; flex-direction: column; padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px calc(env(safe-area-inset-bottom, 0px) + 12px); }
+.overlay { position: fixed; inset: 0; z-index: 20; background: rgba(8, 10, 20, .92); display: none; flex-direction: column; padding: calc(env(safe-area-inset-top, 0px) + 14px) 14px calc(env(safe-area-inset-bottom, 0px) + 14px); }
 .overlay.open { display: flex; }
 .stage { flex: 1; min-height: 0; display: grid; place-items: center; }
-.stage img, .stage video { max-width: 100%; max-height: 100%; border-radius: 8px; }
-.stage iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 8px; }
-.cap { color: #fff; padding: 10px 2px 8px; font-size: 14px; }
-.cap small { display: block; opacity: .65; margin-top: 2px; }
+.stage img, .stage video { max-width: 100%; max-height: 100%; border-radius: 16px; }
+.stage iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 16px; }
+.cap { color: #fff; padding: 12px 2px 10px; font-size: 14px; font-weight: 600; }
+.cap small { display: block; opacity: .65; margin-top: 2px; font-weight: 500; }
 .acts { display: flex; gap: 8px; }
-.acts a, .acts button { flex: 1; text-align: center; padding: 11px; border-radius: 12px; background: var(--accent); color: var(--accent-text); font-weight: 600; }
-.acts button { background: rgba(255,255,255,.16); color: #fff; }
+.acts a, .acts button { flex: 1; text-align: center; padding: 12px 6px; border-radius: 16px; font-weight: 700; font-size: 14px; background: rgba(255, 255, 255, .16); color: #fff; }
+.acts a { background: linear-gradient(135deg, var(--primary), var(--primary2)); }
 
-.sheet { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.45); display: none; align-items: flex-end; }
+.sheet { position: fixed; inset: 0; z-index: 30; background: rgba(10, 12, 24, .5); display: none; align-items: flex-end; }
 .sheet.open { display: flex; }
-.panel { width: 100%; max-height: 90vh; overflow: auto; background: var(--bg); border-radius: 18px 18px 0 0; padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 18px); }
-.panel h3 { margin: 0 0 4px; font-size: 18px; }
-.panel label { display: block; margin-top: 14px; font-weight: 500; }
-.panel input, .panel select { width: 100%; margin-top: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--sec); }
-.panel .help { color: var(--hint); font-size: 13px; margin-top: 4px; }
-.panel .help a { color: var(--link); }
-.panel .save { width: 100%; margin-top: 18px; padding: 12px; border-radius: 12px; background: var(--accent); color: var(--accent-text); font-weight: 600; }
-@media (prefers-reduced-motion: no-preference) { .overlay.open, .sheet.open { animation: fade .15s ease-out; } @keyframes fade { from { opacity: 0; } } }
+.panel { width: 100%; max-width: 720px; margin: 0 auto; max-height: 90vh; overflow: auto; background: var(--card); border-radius: 28px 28px 0 0; padding: 20px 18px calc(env(safe-area-inset-bottom, 0px) + 20px); }
+.panel h3 { margin: 0 0 2px; font-size: 20px; font-weight: 800; }
+.panel label { display: block; margin-top: 16px; font-weight: 700; }
+.panel input, .panel select, .panel textarea { width: 100%; margin-top: 6px; padding: 11px 13px; border-radius: 14px; border: 0; background: var(--soft); font-size: 16px; font-weight: 500; }
+.panel textarea { min-height: 150px; resize: vertical; font-size: 14px; line-height: 1.5; }
+.panel .help { color: var(--hint); font-size: 13px; margin-top: 5px; font-weight: 500; }
+.panel .help a { color: var(--primary); font-weight: 700; }
+.panel .save { width: 100%; margin-top: 20px; padding: 14px; border-radius: 16px; background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; font-weight: 800; }
+.panel .reset { margin-top: 8px; color: var(--primary); font-weight: 700; font-size: 13px; }
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); transform: translateX(-50%); background: #151a2d; color: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 40; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="cap1">Научпоп-поиск</div>
+      <h1>Что ищем?</h1>
+    </div>
+    <button class="round" id="gear" type="button" aria-label="Настройки">⚙️</button>
+  </div>
 
-<header>
-  <form id="form" autocomplete="off">
-    <label class="field">
-      <input id="q" type="search" enterkeyhint="search" placeholder="Что найти?" aria-label="Запрос">
-    </label>
+  <form id="form" class="searchbox" autocomplete="off">
+    <input id="q" type="search" enterkeyhint="search" placeholder="Например: как работает вакцина" aria-label="Запрос">
     <button class="go" type="submit">Найти</button>
-    <button class="gear" type="button" id="gear" aria-label="Настройки">⚙️</button>
   </form>
-  <div class="tabs" role="tablist" id="tabs">
-    <button role="tab" data-tab="info" aria-selected="true">Статьи</button>
-    <button role="tab" data-tab="image" aria-selected="false">Картинки</button>
-    <button role="tab" data-tab="video" aria-selected="false">Видео</button>
+  <form id="enform" class="enrow" autocomplete="off" hidden>
+    <label for="qen">На английском</label>
+    <input id="qen" type="text" enterkeyhint="search" autocapitalize="off" spellcheck="false">
+  </form>
+
+  <div class="seg" role="tablist" id="tabs">
+    <button type="button" role="tab" data-tab="info" aria-selected="true">Статьи</button>
+    <button type="button" role="tab" data-tab="image" aria-selected="false">Картинки</button>
+    <button type="button" role="tab" data-tab="video" aria-selected="false">Видео</button>
   </div>
   <div class="chips" id="chips"></div>
-</header>
 
-<main id="results"></main>
+  <main id="results"></main>
+</div>
 
 <div class="overlay" id="viewer" role="dialog" aria-modal="true">
   <div class="stage" id="stage"></div>
   <div class="cap" id="cap"></div>
-  <div class="acts"><a id="src" data-ext href="#">Открыть источник</a><button type="button" id="vclose">Закрыть</button></div>
+  <div class="acts">
+    <a id="src" data-ext href="#">Источник</a>
+    <button type="button" id="vcopy">Копировать</button>
+    <button type="button" id="vclose">Закрыть</button>
+  </div>
 </div>
 
 <div class="sheet" id="sheet">
   <div class="panel">
     <h3>Настройки</h3>
     <div class="help">Ключи хранятся только на этом устройстве.</div>
-    <label>Язык статей и подсказок
+    <label>Язык Википедии
       <select id="lang">
         <option value="ru">Русский</option><option value="en">English</option>
         <option value="de">Deutsch</option><option value="fr">Français</option><option value="es">Español</option>
       </select>
     </label>
-    <label>Ключ Pixabay (картинки и видео)
+    <label>Ключ Pexels (стоковые фото и видео)
+      <input id="k-pexels" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Вставь ключ">
+      <div class="help">Бесплатно: <a data-ext href="https://www.pexels.com/api/">pexels.com/api</a></div>
+    </label>
+    <label>Ключ Pixabay (стоковые фото и видео)
       <input id="k-pixabay" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Вставь ключ">
       <div class="help">Бесплатно: <a data-ext href="https://pixabay.com/api/docs/">pixabay.com/api/docs</a></div>
     </label>
-    <label>Ключ YouTube Data API v3
-      <input id="k-youtube" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Вставь ключ">
-      <div class="help">Создаётся в <a data-ext href="https://console.cloud.google.com/apis/library/youtube.googleapis.com">Google Cloud</a>, есть бесплатная квота.</div>
+    <label>Сайты здравоохранения
+      <textarea id="sites" spellcheck="false" autocapitalize="off"></textarea>
+      <div class="help">По одному в строке: домен, пробел, название.</div>
+      <button type="button" class="reset" id="sites-reset">Вернуть список по умолчанию</button>
     </label>
     <button class="save" type="button" id="save">Сохранить</button>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
 const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
+const dark = tg ? tg.colorScheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+if (tg) { try { tg.setHeaderColor(dark ? '#141824' : '#e3ebf6'); tg.setBackgroundColor(dark ? '#141824' : '#e3ebf6'); } catch (e) {} }
 
 const $ = s => document.querySelector(s);
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
-let cfg = Object.assign({ pixabay: '', youtube: '', lang: 'ru', off: {} }, store.get('cfg', {}));
-let recent = store.get('recent', []);
-let tab = 'info', sid = 0, current = [];
 
+const DEFAULT_SITES = `who.int ВОЗ
+ecdc.europa.eu ECDC (ЕС)
+efsa.europa.eu EFSA (безопасность еды)
+ema.europa.eu EMA (лекарства ЕС)
+nhs.uk NHS (Великобритания)
+nice.org.uk NICE (Великобритания)
+cochrane.org Cochrane
+nih.gov NIH (США)
+medlineplus.gov MedlinePlus (США)
+cdc.gov CDC (США)
+fda.gov FDA (США)
+mayoclinic.org Mayo Clinic
+health.harvard.edu Harvard Health
+canada.ca/en/public-health Public Health Canada
+health.gov.au Минздрав Австралии
+ourworldindata.org Our World in Data`;
+
+let cfg = Object.assign({ pixabay: '', pexels: '', lang: 'ru', off: {}, sitesOff: {}, sites: DEFAULT_SITES, freeOnly: true, reviewsOnly: false }, store.get('cfg', {}));
+let recent = store.get('recent', []);
+let tab = 'info', sid = 0, current = [], ctx = { q: '', en: '' }, vtok = 0, viewerItem = null;
+
+const enc = encodeURIComponent;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const safe = u => /^https?:\/\//i.test(u || '') ? esc(u) : '#';
 const strip = h => new DOMParser().parseFromString(String(h || ''), 'text/html').body.textContent || '';
-const enc = encodeURIComponent;
+const slug = s => String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const openLink = url => (tg && tg.openLink) ? tg.openLink(url) : window.open(url, '_blank');
+const parseSites = () => cfg.sites.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const p = l.split(/\s+/); return { d: p[0], n: p.slice(1).join(' ') || p[0] }; });
 
-async function getJSON(url) {
+async function getJSON(url, headers) {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), 12000);
   try {
-    const r = await fetch(url, { signal: c.signal });
+    const r = await fetch(url, { signal: c.signal, headers: headers || undefined });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return await r.json();
   } finally { clearTimeout(t); }
 }
 
+async function translate(q) {
+  const d = await getJSON(`https://api.mymemory.translated.net/get?q=${enc(q)}&langpair=ru%7Cen`);
+  const t = d && d.responseData && d.responseData.translatedText;
+  if (!t || /MYMEMORY|INVALID/i.test(t)) throw new Error('no translation');
+  return strip(t);
+}
+
 /* ---------- Источники ---------- */
-const commons = (q, filter, type) => getJSON(
-  `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${enc(q + ' ' + filter)}&gsrlimit=24&prop=imageinfo&iiprop=url&iiurlwidth=400&format=json&origin=*`
+const PT = {
+  'Meta-Analysis': ['Мета-анализ', 'g'], 'Systematic Review': ['Системный обзор', 'g'],
+  'Practice Guideline': ['Рекомендации', 'g'], 'Guideline': ['Рекомендации', 'g'],
+  'Randomized Controlled Trial': ['РКИ', 'b'], 'Review': ['Обзор', 'b']
+};
+
+const commons = (en, filter, type) => getJSON(
+  `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${enc(en + ' ' + filter)}&gsrlimit=40&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=500&format=json&origin=*`
 ).then(d => Object.values((d.query && d.query.pages) || {}).sort((a, b) => a.index - b.index).map(p => {
   const i = (p.imageinfo || [])[0] || {};
-  return { type, thumb: i.thumburl || i.url, full: i.url, title: p.title.replace(/^File:/, '').replace(/\.\w+$/, ''), page: i.descriptionurl, meta: 'Wikimedia Commons' };
-}).filter(x => x.thumb));
+  const lic = (i.extmetadata && i.extmetadata.LicenseShortName && i.extmetadata.LicenseShortName.value) || '';
+  return { type, thumb: i.thumburl || i.url, full: i.url, title: p.title.replace(/^File:/, '').replace(/\.\w+$/, ''), page: i.descriptionurl, meta: 'Wikimedia Commons', lic };
+}).filter(x => x.thumb && (!cfg.freeOnly || /public domain|cc0|^pd/i.test(x.lic))));
 
-const pbLang = () => cfg.lang;
+const nasa = (en, mt) => getJSON(`https://images-api.nasa.gov/search?q=${enc(en)}&media_type=${mt}&page_size=24`)
+  .then(d => d.collection.items.map(i => {
+    const m = (i.data || [])[0] || {};
+    const th = i.links && i.links[0] && i.links[0].href ? i.links[0].href.replace('http://', 'https://') : '';
+    return { type: mt, thumb: th, full: mt === 'image' ? th.replace('~thumb.', '~medium.') : '', asset: mt === 'video' ? i.href : '', title: m.title, page: `https://images.nasa.gov/details/${m.nasa_id}`, meta: 'NASA', lic: 'NASA' };
+  }).filter(x => x.thumb));
+
+async function resolveVideo(it) {
+  const files = await getJSON(it.asset);
+  const mp4 = files.filter(u => /\.mp4$/i.test(u)).map(u => u.replace('http://', 'https://'));
+  return mp4.find(u => /~medium/.test(u)) || mp4.find(u => /~small/.test(u)) || mp4.find(u => /~mobile/.test(u)) || mp4[0];
+}
 
 const SOURCES = {
   info: [
-    { id: 'wiki', label: 'Википедия', run: async q => {
-      const l = cfg.lang;
-      const d = await getJSON(`https://${l}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${enc(q)}&gsrlimit=6&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&piprop=thumbnail&pithumbsize=160&format=json&origin=*`);
+    { id: 'wiki', label: 'Википедия', ico: '📖', t: '#6b7280', run: async (q, en) => {
+      const l = cfg.lang, term = l === 'ru' ? q : en;
+      const d = await getJSON(`https://${l}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${enc(term)}&gsrlimit=6&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&piprop=thumbnail&pithumbsize=160&format=json&origin=*`);
       return Object.values((d.query && d.query.pages) || {}).sort((a, b) => a.index - b.index).map(p => ({
         title: p.title, text: p.extract, thumb: p.thumbnail && p.thumbnail.source, url: `https://${l}.wikipedia.org/?curid=${p.pageid}`, meta: `${l}.wikipedia.org`
       }));
     } },
-    { id: 'hn', label: 'Hacker News', run: async q => {
-      const d = await getJSON(`https://hn.algolia.com/api/v1/search?query=${enc(q)}&tags=story&hitsPerPage=6`);
-      return d.hits.filter(h => h.title).map(h => ({
-        title: h.title, text: `${h.points || 0} очков, ${h.num_comments || 0} комментариев`, url: h.url || `https://news.ycombinator.com/item?id=${h.objectID}`, meta: h.url ? new URL(h.url).hostname : 'news.ycombinator.com'
-      }));
-    } },
-    { id: 'so', label: 'Stack Overflow', run: async q => {
-      const d = await getJSON(`https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&q=${enc(q)}&site=stackoverflow&pagesize=6`);
-      return d.items.map(i => ({ title: strip(i.title), text: `${i.score} голосов, ответов: ${i.answer_count}`, url: i.link, meta: 'stackoverflow.com' }));
-    } },
-    { id: 'books', label: 'Книги', run: async q => {
-      const d = await getJSON(`https://www.googleapis.com/books/v1/volumes?q=${enc(q)}&maxResults=6&langRestrict=${cfg.lang}`);
-      return (d.items || []).map(i => {
-        const v = i.volumeInfo || {};
-        return { title: v.title, text: [(v.authors || []).join(', '), v.description].filter(Boolean).join(' — '), thumb: v.imageLinks && v.imageLinks.thumbnail && v.imageLinks.thumbnail.replace('http://', 'https://'), url: v.infoLink, meta: 'Google Books' };
+    { id: 'pubmed', label: 'PubMed', ico: '🧬', t: '#2f80ed', run: async (q, en) => {
+      let term = `(${en}) NOT "retracted publication"[pt]`;
+      if (cfg.reviewsOnly) term += ' AND (meta-analysis[pt] OR systematic review[pt] OR review[pt])';
+      const s = await getJSON(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=8&sort=relevance&term=${enc(term)}`);
+      const ids = (s.esearchresult && s.esearchresult.idlist) || [];
+      if (!ids.length) return [];
+      const d = await getJSON(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
+      return ids.map(id => d.result[id]).filter(Boolean).map(r => {
+        const seen = {}, badges = [];
+        (r.pubtype || []).forEach(t => { if (PT[t] && !seen[PT[t][0]]) { seen[PT[t][0]] = 1; badges.push(PT[t]); } });
+        return { title: strip(r.title), text: [(r.authors || []).slice(0, 3).map(a => a.name).join(', '), r.source].filter(Boolean).join(' · '), badges, year: (r.pubdate || '').slice(0, 4), url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, meta: 'pubmed.ncbi.nlm.nih.gov' };
       });
+    } },
+    { id: 'epmc', label: 'Europe PMC', ico: '📚', t: '#12a594', run: async (q, en) => {
+      const query = `(${en}) AND OPEN_ACCESS:y AND (SRC:MED OR SRC:PMC)`;
+      const d = await getJSON(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${enc(query)}&format=json&pageSize=8&resultType=lite`);
+      return ((d.resultList && d.resultList.result) || []).map(r => ({
+        title: strip(r.title), text: [r.journalTitle, r.citedByCount ? 'цитирований: ' + r.citedByCount : ''].filter(Boolean).join(' · '), badges: [['Полный текст', 't']], year: r.pubYear, url: `https://europepmc.org/article/${r.source}/${r.id}`, meta: 'europepmc.org'
+      }));
     } }
   ],
   image: [
-    { id: 'openverse', label: 'Openverse', run: async q => {
-      const d = await getJSON(`https://api.openverse.org/v1/images/?q=${enc(q)}&page_size=24`);
-      return d.results.map(r => ({ type: 'image', thumb: r.thumbnail || r.url, full: r.url, title: r.title || 'Без названия', page: r.foreign_landing_url, meta: `Openverse, лицензия ${(r.license || '').toUpperCase()}${r.creator ? ', ' + r.creator : ''}` }));
+    { id: 'openverse', label: 'Openverse', run: async (q, en) => {
+      const d = await getJSON(`https://api.openverse.org/v1/images/?q=${enc(en)}&page_size=24${cfg.freeOnly ? '&license=cc0,pdm' : ''}`);
+      return d.results.map(r => ({ type: 'image', thumb: r.thumbnail || r.url, full: r.url, title: r.title || 'Без названия', page: r.foreign_landing_url, meta: 'Openverse' + (r.creator ? ', ' + r.creator : ''), lic: r.license === 'pdm' ? 'Public domain' : (r.license || '').toUpperCase() }));
     } },
-    { id: 'commons', label: 'Wikimedia', run: q => commons(q, 'filetype:bitmap', 'image') },
-    { id: 'pixabay', label: 'Pixabay', key: 'pixabay', run: async q => {
-      const d = await getJSON(`https://pixabay.com/api/?key=${enc(cfg.pixabay)}&q=${enc(q)}&per_page=24&safesearch=true&lang=${pbLang()}`);
-      return d.hits.map(h => ({ type: 'image', thumb: h.webformatURL, full: h.largeImageURL, title: h.tags, page: h.pageURL, meta: 'Pixabay, ' + h.user }));
+    { id: 'nasaimg', label: 'NASA', run: (q, en) => nasa(en, 'image') },
+    { id: 'commons', label: 'Wikimedia', run: (q, en) => commons(en, 'filetype:bitmap', 'image') },
+    { id: 'pexels', label: 'Pexels', key: 'pexels', run: async (q, en) => {
+      const d = await getJSON(`https://api.pexels.com/v1/search?query=${enc(en)}&per_page=24`, { Authorization: cfg.pexels });
+      return d.photos.map(p => ({ type: 'image', thumb: p.src.medium, full: p.src.large, title: p.alt || 'Фото', page: p.url, meta: 'Pexels, ' + p.photographer, lic: 'Pexels' }));
+    } },
+    { id: 'pixabay', label: 'Pixabay', key: 'pixabay', run: async (q, en) => {
+      const d = await getJSON(`https://pixabay.com/api/?key=${enc(cfg.pixabay)}&q=${enc(en)}&per_page=24&safesearch=true`);
+      return d.hits.map(h => ({ type: 'image', thumb: h.webformatURL, full: h.largeImageURL, title: h.tags, page: h.pageURL, meta: 'Pixabay, ' + h.user, lic: 'Pixabay' }));
     } }
   ],
   video: [
-    { id: 'cvideo', label: 'Wikimedia', run: q => commons(q, 'filetype:video', 'video') },
-    { id: 'pxvideo', label: 'Pixabay', key: 'pixabay', run: async q => {
-      const d = await getJSON(`https://pixabay.com/api/videos/?key=${enc(cfg.pixabay)}&q=${enc(q)}&per_page=18&safesearch=true&lang=${pbLang()}`);
+    { id: 'pexvideo', label: 'Pexels', key: 'pexels', run: async (q, en) => {
+      const d = await getJSON(`https://api.pexels.com/videos/search?query=${enc(en)}&per_page=18`, { Authorization: cfg.pexels });
+      return d.videos.map(v => {
+        const files = (v.video_files || []).filter(f => f.file_type === 'video/mp4');
+        const f = files.filter(x => x.width && x.width <= 1280).sort((a, b) => b.width - a.width)[0] || files[0];
+        if (!f) return null;
+        const title = (v.url || '').split('/').filter(Boolean).pop().replace(/-\d+$/, '').replace(/-/g, ' ') || 'Видео';
+        return { type: 'video', thumb: v.image, full: f.link, title, page: v.url, meta: 'Pexels, ' + (v.user && v.user.name), lic: 'Pexels' };
+      }).filter(Boolean);
+    } },
+    { id: 'pxvideo', label: 'Pixabay', key: 'pixabay', run: async (q, en) => {
+      const d = await getJSON(`https://pixabay.com/api/videos/?key=${enc(cfg.pixabay)}&q=${enc(en)}&per_page=18&safesearch=true`);
       return d.hits.map(h => {
         const v = h.videos || {};
-        const f = (v.medium && v.medium.url) || (v.small && v.small.url) || (v.tiny && v.tiny.url);
-        return { type: 'video', thumb: `https://i.vimeocdn.com/video/${h.picture_id}_640x360.jpg`, full: f, title: h.tags, page: h.pageURL, meta: 'Pixabay, ' + h.user };
-      }).filter(x => x.full);
+        const sz = (v.medium && v.medium.url) ? v.medium : ((v.small && v.small.url) ? v.small : v.tiny);
+        if (!sz || !sz.url) return null;
+        return { type: 'video', thumb: sz.thumbnail || `https://i.vimeocdn.com/video/${h.picture_id}_640x360.jpg`, full: sz.url, title: h.tags, page: h.pageURL, meta: 'Pixabay, ' + h.user, lic: 'Pixabay' };
+      }).filter(Boolean);
     } },
-    { id: 'yt', label: 'YouTube', key: 'youtube', run: async q => {
-      const d = await getJSON(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=15&q=${enc(q)}&key=${enc(cfg.youtube)}`);
-      return d.items.map(i => ({ type: 'yt', id: i.id.videoId, thumb: i.snippet.thumbnails.medium.url, title: strip(i.snippet.title), page: `https://www.youtube.com/watch?v=${i.id.videoId}`, meta: 'YouTube, ' + i.snippet.channelTitle }));
-    } }
+    { id: 'nasavideo', label: 'NASA', run: (q, en) => nasa(en, 'video') },
+    { id: 'archive', label: 'Internet Archive', run: async (q, en) => {
+      const lic = cfg.freeOnly ? ' AND (licenseurl:*publicdomain* OR collection:prelinger OR collection:nasa)' : '';
+      const d = await getJSON(`https://archive.org/advancedsearch.php?q=${enc('(' + en + ') AND mediatype:movies' + lic)}&fl%5B%5D=identifier&fl%5B%5D=title&rows=18&output=json`);
+      return d.response.docs.map(x => ({ type: 'embed', embed: `https://archive.org/embed/${x.identifier}`, thumb: `https://archive.org/services/img/${x.identifier}`, title: strip(Array.isArray(x.title) ? x.title[0] : x.title), page: `https://archive.org/details/${x.identifier}`, meta: 'Internet Archive', lic: cfg.freeOnly ? 'Public domain' : 'Archive' }));
+    } },
+    { id: 'cvideo', label: 'Wikimedia', run: (q, en) => commons(en, 'filetype:video', 'video') }
   ]
 };
 
 const LINKS = {
-  info: [['Google', q => `https://www.google.com/search?q=${enc(q)}`], ['Яндекс', q => `https://yandex.ru/search/?text=${enc(q)}`], ['DuckDuckGo', q => `https://duckduckgo.com/?q=${enc(q)}`]],
-  image: [['Google Картинки', q => `https://www.google.com/search?tbm=isch&q=${enc(q)}`], ['Яндекс Картинки', q => `https://yandex.ru/images/search?text=${enc(q)}`], ['Pinterest', q => `https://www.pinterest.com/search/pins/?q=${enc(q)}`]],
-  video: [['YouTube', q => `https://www.youtube.com/results?search_query=${enc(q)}`], ['Rutube', q => `https://rutube.ru/search/?query=${enc(q)}`], ['Vimeo', q => `https://vimeo.com/search?q=${enc(q)}`]]
+  info: en => [['Google Scholar', `https://scholar.google.com/scholar?q=${enc(en)}`], ['Semantic Scholar', `https://www.semanticscholar.org/search?q=${enc(en)}`]],
+  image: en => [['Pexels', `https://www.pexels.com/search/${enc(en)}/`], ['Pixabay', `https://pixabay.com/images/search/${enc(en)}/`], ['Unsplash', `https://unsplash.com/s/photos/${slug(en)}`]],
+  video: en => [['Pexels', `https://www.pexels.com/search/videos/${enc(en)}/`], ['Pixabay', `https://pixabay.com/videos/search/${enc(en)}/`], ['Mixkit', `https://mixkit.co/free-stock-video/${slug(en)}/`], ['Coverr', `https://coverr.co/s?q=${enc(en)}`]]
 };
 
 /* ---------- Интерфейс ---------- */
 function renderChips() {
-  $('#chips').innerHTML = SOURCES[tab].map(s => {
+  let h = SOURCES[tab].map(s => {
     const locked = s.key && !cfg[s.key];
     const on = !locked && !cfg.off[s.id];
-    return `<button type="button" class="chip ${on ? 'on' : ''} ${locked ? 'lock' : ''}" data-id="${s.id}" title="${locked ? 'Нужен ключ в настройках' : ''}">${locked ? '🔒 ' : ''}${s.label}</button>`;
+    return `<button type="button" class="chip ${on ? 'on' : ''} ${locked ? 'lock' : ''}" data-id="${s.id}">${locked ? '🔒 ' : ''}${s.label}</button>`;
   }).join('');
+  if (tab === 'info') h += `<button type="button" class="chip tog ${cfg.reviewsOnly ? 'on' : ''}" data-t="reviewsOnly">Только обзоры (PubMed)</button>`;
+  else h += `<button type="button" class="chip tog ${cfg.freeOnly ? 'on' : ''}" data-t="freeOnly">Свободные лицензии</button>`;
+  $('#chips').innerHTML = h;
 }
 
 function renderHome() {
-  const hint = { info: 'Введи тему, и я соберу статьи, обсуждения и книги.', image: 'Опиши, какая картинка нужна.', video: 'Опиши, какое видео ищешь.' }[tab];
-  $('#results').innerHTML = `<p class="note">${hint}</p>` + (recent.length ? `<div class="recent">${recent.map(r => `<button type="button" data-r="${esc(r)}">${esc(r)}</button>`).join('')}</div>` : '');
+  const tips = {
+    info: ['Научные базы понимают английский', 'Пиши по-русски: запрос сам переведётся для PubMed и Europe PMC. Перевод можно поправить под строкой поиска.'],
+    image: ['Ищи по сути кадра', 'Короткие запросы работают лучше длинных: «микроскоп», «клетки крови», «вакцинация».'],
+    video: ['Видео без указания автора', 'Включён фильтр свободных лицензий. На карточке видно, откуда ролик и под какой лицензией.']
+  }[tab];
+  $('#results').innerHTML = `<div class="card green tip"><h2>${tips[0]}</h2><p>${tips[1]}</p></div>` +
+    (recent.length ? `<div class="recent">${recent.map(r => `<button type="button" data-r="${esc(r)}">${esc(r)}</button>`).join('')}</div>` : '');
 }
 
-function linksBlock(q) {
-  return `<div class="links">Искать ещё: ${LINKS[tab].map(([n, f]) => `<a data-ext href="${esc(f(q))}">${n}</a>`).join('')}</div>`;
+function sitesHTML() {
+  const sites = parseSites();
+  const on = sites.filter(s => !cfg.sitesOff[s.d]);
+  const q = ctx.en || ctx.q;
+  const g = on.length ? `(${on.map(s => 'site:' + s.d).join(' OR ')}) ${q}` : '';
+  return `<section class="card grad" id="sites">
+    <div class="sh"><span class="ico">🏛</span><h2>Сайты здравоохранения</h2></div>
+    <p class="gp">Отметь, где искать. Запрос откроется в Google только по этим сайтам.</p>
+    <div class="sitechips">${sites.map(s => `<button type="button" class="sc ${cfg.sitesOff[s.d] ? '' : 'on'}" data-d="${esc(s.d)}">${esc(s.n)}</button>`).join('')}</div>
+    <a class="bigbtn" data-ext href="${g ? esc('https://www.google.com/search?q=' + enc(g)) : '#'}">Искать на ${on.length} сайтах</a>
+  </section>`;
 }
 
-function cardHTML(it) {
-  return `<a class="card" data-ext href="${safe(it.url)}">${it.thumb ? `<img loading="lazy" src="${safe(it.thumb)}" alt="">` : ''}<div><b>${esc(it.title)}</b>${it.text ? `<p>${esc(it.text)}</p>` : ''}<small>${esc(it.meta || '')}</small></div></a>`;
+function linksBlock() {
+  return `<div class="card links">Искать ещё: ${LINKS[tab](ctx.en || ctx.q).map(([n, u]) => `<a data-ext href="${esc(u)}">${n}</a>`).join('')}</div>`;
 }
 
-function renderMedia(q, pending, errs) {
-  const res = $('#results');
+function itemHTML(it) {
+  const pills = (it.badges || []).map(b => `<span class="pill ${b[1]}">${esc(b[0])}</span>`).join('') + (it.year ? `<span class="pill">${esc(it.year)}</span>` : '');
+  return `<a class="item" data-ext href="${safe(it.url)}">${it.thumb ? `<img loading="lazy" src="${safe(it.thumb)}" alt="">` : ''}<div class="ib"><b>${esc(it.title)}</b>${it.text ? `<p>${esc(it.text)}</p>` : ''}<div class="pills">${pills}<span class="src">${esc(it.meta || '')}</span></div></div></a>`;
+}
+
+function renderMedia(pending, errs) {
   let html = '';
   if (current.length) {
-    html += `<div class="grid">${current.map((it, i) => `<button type="button" class="m" data-i="${i}"><img loading="lazy" src="${safe(it.thumb)}" alt=""><span>${esc(it.title)}</span>${it.type !== 'image' ? '<i class="play">▶</i>' : ''}</button>`).join('')}</div>`;
+    html += `<div class="grid">${current.map((it, i) => `<button type="button" class="m" data-i="${i}"><img loading="lazy" src="${safe(it.thumb)}" alt="">${it.lic ? `<b class="lic">${esc(it.lic)}</b>` : ''}${it.type !== 'image' ? '<i class="play">▶</i>' : ''}<span>${esc(it.title)}</span></button>`).join('')}</div>`;
   }
-  if (pending > 0) html += `<div class="spin">Ищу ещё…</div>`;
-  else if (!current.length) html += `<p class="note">Ничего не нашлось. Попробуй другие слова или включи другой источник.</p>`;
+  if (pending > 0) html += '<div class="spin">Ищу ещё…</div>';
+  else if (!current.length) html += '<div class="card"><p class="note">Ничего не нашлось. Попробуй другие слова или включи другой источник.</p></div>';
   if (errs.length && pending === 0) html += `<p class="err">Не ответили: ${errs.join(', ')}.</p>`;
-  if (pending === 0) html += linksBlock(q);
-  res.innerHTML = html;
+  if (pending === 0) html += linksBlock();
+  $('#results').innerHTML = html;
 }
 
-async function search(q) {
-  q = q.trim();
+async function search(q, enOverride) {
+  q = (q || '').trim();
   if (!q) return;
   recent = [q, ...recent.filter(r => r !== q)].slice(0, 8);
   store.set('recent', recent);
   $('#q').blur();
   const id = ++sid;
-  current = [];
-  const srcs = SOURCES[tab].filter(s => !(s.key && !cfg[s.key]) && !cfg.off[s.id]);
   const res = $('#results');
-  if (!srcs.length) { res.innerHTML = '<p class="note">Включи хотя бы один источник.</p>'; return; }
+  res.innerHTML = '<div class="spin">Ищу…</div>';
+
+  const cyr = /[а-яёіїє]/i.test(q);
+  let en = q;
+  if (enOverride && enOverride.trim()) en = enOverride.trim();
+  else if (cyr) {
+    if (ctx.q === q && ctx.en) en = ctx.en;
+    else { try { en = await translate(q); } catch (e) { en = q; } }
+  }
+  if (id !== sid) return;
+  ctx = { q, en };
+  $('#enform').hidden = !cyr;
+  $('#qen').value = en;
+
+  const srcs = SOURCES[tab].filter(s => !(s.key && !cfg[s.key]) && !cfg.off[s.id]);
+  current = [];
 
   if (tab === 'info') {
-    res.innerHTML = srcs.map(s => `<section id="sec-${s.id}"><h2>${s.label}</h2><div class="spin">Загружаю…</div></section>`).join('') + linksBlock(q);
+    res.innerHTML = sitesHTML() + srcs.map(s => `<section class="card tint" style="--t:${s.t}" id="sec-${s.id}"><div class="sh"><span class="ico">${s.ico}</span><h2>${s.label}</h2></div><div class="body"><div class="spin">Загружаю…</div></div></section>`).join('') + linksBlock();
     srcs.forEach(async s => {
       let html;
       try {
-        const items = (await s.run(q)).filter(x => x.title);
-        html = items.length ? items.map(cardHTML).join('') : '<p class="err">Ничего не нашлось.</p>';
+        const items = (await s.run(q, en)).filter(x => x.title);
+        html = items.length ? items.map(itemHTML).join('') : '<p class="err">Ничего не нашлось.</p>';
       } catch (e) { html = '<p class="err">Источник не ответил. Попробуй ещё раз позже.</p>'; }
       if (id !== sid) return;
-      const sec = document.getElementById('sec-' + s.id);
-      if (sec) sec.innerHTML = `<h2>${s.label}</h2>${html}`;
+      const body = document.querySelector(`#sec-${s.id} .body`);
+      if (body) body.innerHTML = html;
     });
-  } else {
-    let pending = srcs.length; const errs = [];
-    res.innerHTML = '<div class="spin">Ищу…</div>';
-    srcs.forEach(async s => {
-      try { const items = await s.run(q); if (id === sid) current.push(...items); }
-      catch (e) { errs.push(s.label); }
-      if (id !== sid) return;
-      pending--;
-      renderMedia(q, pending, errs);
-    });
+    return;
   }
+
+  if (!srcs.length) { res.innerHTML = '<div class="card"><p class="note">Включи хотя бы один источник или добавь ключ в настройках.</p></div>' + linksBlock(); return; }
+  let pending = srcs.length;
+  const errs = [];
+  srcs.forEach(async s => {
+    try { const items = await s.run(q, en); if (id === sid) current.push(...items); }
+    catch (e) { errs.push(s.label); }
+    if (id !== sid) return;
+    pending--;
+    renderMedia(pending, errs);
+  });
 }
 
 /* ---------- Просмотр ---------- */
-function openViewer(it) {
-  const st = $('#stage');
-  if (it.type === 'image') st.innerHTML = `<img src="${safe(it.full)}" alt="${esc(it.title)}">`;
-  else if (it.type === 'yt') st.innerHTML = `<iframe src="https://www.youtube.com/embed/${enc(it.id)}?autoplay=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-  else st.innerHTML = `<video src="${safe(it.full)}" poster="${safe(it.thumb)}" controls autoplay playsinline></video>`;
-  $('#cap').innerHTML = `${esc(it.title)}<small>${esc(it.meta || '')}</small>`;
-  $('#src').href = it.page || it.full || '#';
+async function openViewer(it) {
+  const tok = ++vtok, st = $('#stage');
+  viewerItem = it;
+  $('#cap').innerHTML = `${esc(it.title)}<small>${esc(it.meta || '')}${it.lic ? ' · ' + esc(it.lic) : ''}</small>`;
+  $('#src').href = it.page || '#';
   $('#viewer').classList.add('open');
+  if (it.type === 'image') {
+    st.innerHTML = `<img id="vimg" src="${safe(it.full)}" alt="">`;
+    $('#vimg').onerror = function () { this.onerror = null; this.src = it.thumb; };
+  } else if (it.type === 'embed') {
+    st.innerHTML = `<iframe src="${safe(it.embed)}" allowfullscreen></iframe>`;
+  } else {
+    st.innerHTML = '<div class="spin white">Загружаю видео…</div>';
+    let url = it.full;
+    try { if (!url && it.asset) url = await resolveVideo(it); } catch (e) {}
+    if (tok !== vtok) return;
+    st.innerHTML = url ? `<video src="${safe(url)}" poster="${safe(it.thumb)}" controls autoplay playsinline></video>` : '<p class="note white">Не удалось получить файл. Открой источник.</p>';
+  }
 }
-function closeViewer() { $('#viewer').classList.remove('open'); $('#stage').innerHTML = ''; }
+function closeViewer() { vtok++; $('#viewer').classList.remove('open'); $('#stage').innerHTML = ''; }
+
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1600); }
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); }
+  catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (_) {} a.remove(); }
+  toast('Источник скопирован');
+}
 
 /* ---------- Настройки ---------- */
 function openSheet() {
-  $('#lang').value = cfg.lang; $('#k-pixabay').value = cfg.pixabay; $('#k-youtube').value = cfg.youtube;
+  $('#lang').value = cfg.lang; $('#k-pexels').value = cfg.pexels; $('#k-pixabay').value = cfg.pixabay; $('#sites').value = cfg.sites;
   $('#sheet').classList.add('open');
 }
 
 /* ---------- События ---------- */
 $('#form').addEventListener('submit', e => { e.preventDefault(); search($('#q').value); });
+$('#enform').addEventListener('submit', e => { e.preventDefault(); search($('#q').value, $('#qen').value); });
 $('#gear').addEventListener('click', openSheet);
 $('#vclose').addEventListener('click', closeViewer);
+$('#vcopy').addEventListener('click', () => { const it = viewerItem; if (it) copyText(`${it.title}. ${it.meta}.${it.lic ? ' Лицензия: ' + it.lic + '.' : ''} ${it.page || ''}`); });
 $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') e.currentTarget.classList.remove('open'); });
+$('#sites-reset').addEventListener('click', () => { $('#sites').value = DEFAULT_SITES; });
 $('#save').addEventListener('click', () => {
-  cfg.lang = $('#lang').value; cfg.pixabay = $('#k-pixabay').value.trim(); cfg.youtube = $('#k-youtube').value.trim();
+  cfg.lang = $('#lang').value; cfg.pexels = $('#k-pexels').value.trim(); cfg.pixabay = $('#k-pixabay').value.trim();
+  cfg.sites = $('#sites').value.trim() || DEFAULT_SITES;
   store.set('cfg', cfg); $('#sheet').classList.remove('open'); renderChips();
   if ($('#q').value.trim()) search($('#q').value);
 });
@@ -344,22 +527,32 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeViewe
 $('#tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   tab = b.dataset.tab; sid++;
-  document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
   renderChips();
-  $('#q').value.trim() ? search($('#q').value) : renderHome();
+  if ($('#q').value.trim()) search($('#q').value, $('#enform').hidden ? '' : $('#qen').value); else renderHome();
 });
 
 $('#chips').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if (!b) return;
-  const s = SOURCES[tab].find(x => x.id === b.dataset.id);
-  if (s.key && !cfg[s.key]) { openSheet(); return; }
-  cfg.off[s.id] = !cfg.off[s.id]; store.set('cfg', cfg); renderChips();
-  if ($('#q').value.trim()) search($('#q').value);
+  if (b.dataset.t) { cfg[b.dataset.t] = !cfg[b.dataset.t]; }
+  else {
+    const s = SOURCES[tab].find(x => x.id === b.dataset.id);
+    if (s.key && !cfg[s.key]) { openSheet(); return; }
+    cfg.off[s.id] = !cfg.off[s.id];
+  }
+  store.set('cfg', cfg); renderChips();
+  if ($('#q').value.trim()) search($('#q').value, $('#enform').hidden ? '' : $('#qen').value);
 });
 
 $('#results').addEventListener('click', e => {
   const m = e.target.closest('.m'); if (m) return openViewer(current[+m.dataset.i]);
-  const r = e.target.closest('[data-r]'); if (r) { $('#q').value = r.dataset.r; search(r.dataset.r); }
+  const r = e.target.closest('[data-r]'); if (r) { $('#q').value = r.dataset.r; search(r.dataset.r); return; }
+  const sc = e.target.closest('.sc');
+  if (sc) {
+    cfg.sitesOff[sc.dataset.d] = !cfg.sitesOff[sc.dataset.d];
+    store.set('cfg', cfg);
+    $('#sites').outerHTML = sitesHTML();
+  }
 });
 
 document.addEventListener('click', e => {
