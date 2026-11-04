@@ -135,6 +135,39 @@ h1 { margin: 2px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.01em;
 .addrow{display:flex;gap:8px;margin-top:12px}.addrow input{flex:1;min-width:0;padding:10px 13px;border-radius:14px;border:0;background:var(--soft);font-size:16px}
 .opt{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:14px;background:var(--soft);font-weight:700;margin-top:8px}
 .sl{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;font-weight:600;font-size:13px}
+.seg button{font-size:14px}
+.pill.o{background:rgba(217,119,6,.16);color:#b45309}
+.pill.w{background:rgba(120,113,108,.18);color:#78716c}
+.pill.j{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:transparent;border:1px solid var(--line)}
+.ib p.sum{display:block;overflow:visible;color:var(--text);border-left:3px solid var(--primary);padding-left:9px;margin-top:7px}
+.ta{width:100%;min-height:190px;margin-top:12px;padding:12px 14px;border-radius:16px;border:0;background:var(--soft);font-size:15px;line-height:1.5;resize:vertical}
+.hs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.hs .m{flex:none;width:156px;box-shadow:none}
+.scr{white-space:pre-wrap;line-height:1.75;margin-top:12px}
+.lbar .go{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:0 18px;min-height:44px}
+.mk{background:none;border-radius:5px;padding:1px 2px;cursor:pointer;-webkit-box-decoration-break:clone;box-decoration-break:clone;color:inherit}
+.mk.wait{border-bottom:2px dotted var(--hint)}
+.mk.ok{background:rgba(30,166,90,.22)}
+.mk.part{background:rgba(245,166,35,.28)}
+.mk.contra{background:rgba(139,92,246,.22)}
+.mk.none{background:rgba(216,59,59,.16);border-bottom:2px solid #d83b3b}
+.mk.op{border-bottom:1px dashed var(--hint)}
+.cl{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.cl:first-child{border-top:0;margin-top:0;padding-top:0}
+.cl.flash{animation:fl 1.2s}
+@keyframes fl{from{background:color-mix(in srgb,var(--primary) 18%,transparent)}to{background:transparent}}
+.clh{display:flex;gap:8px;align-items:flex-start}
+.clh .pill{flex:none;margin-top:2px}
+.clh b{font-weight:700;line-height:1.35}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.org{padding:10px 0;border-top:1px solid var(--line)}
+.org:first-child{border-top:0}
+.orgh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.org p{margin:4px 0;font-size:14px}
+.org a{color:var(--primary);font-weight:700;font-size:13px}
+.subrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.subrow button{color:var(--hint);padding:4px 10px}
+@media (prefers-reduced-motion:reduce){.cl.flash{animation:none}}
 </style>
 </head>
 <body>
@@ -160,6 +193,7 @@ h1 { margin: 2px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.01em;
     <button type="button" role="tab" data-tab="info" aria-selected="true">Статьи</button>
     <button type="button" role="tab" data-tab="image" aria-selected="false">Картинки</button>
     <button type="button" role="tab" data-tab="video" aria-selected="false">Видео</button>
+    <button type="button" role="tab" data-tab="script" aria-selected="false">Сценарий</button>
   </div>
   <div class="chips" id="chips"></div>
 
@@ -186,6 +220,17 @@ h1 { margin: 2px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.01em;
         <option value="de">Deutsch</option><option value="fr">Français</option><option value="es">Español</option>
       </select>
     </label>
+    <label>Адрес Worker (умный поиск, перевод, сценарий)
+      <input id="k-worker" type="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://nauchpop-api.имя.workers.dev">
+      <div class="help">Инструкция по запуску в README.</div>
+    </label>
+    <label>Токен доступа (нужен, только если открываешь апп вне Telegram)
+      <input id="k-token" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Необязательно">
+    </label>
+    <div style="margin-top:16px;font-weight:700">Подписки на свежие мета-анализы</div>
+    <div id="subs"><div class="help">Загружаю…</div></div>
+    <div class="addrow"><input id="newsub" placeholder="Тема, например: витамин D"><button class="go" id="addsub" type="button">＋</button></div>
+    <div class="help">Раз в день бот пришлёт новые мета-анализы и системные обзоры. Сначала нажми Start у бота.</div>
     <label>Ключ Pexels (стоковые фото и видео)
       <input id="k-pexels" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Вставь ключ">
       <div class="help">Бесплатно: <a data-ext href="https://www.pexels.com/api/">pexels.com/api</a></div>
@@ -236,12 +281,14 @@ canada.ca/en/public-health Public Health Canada
 health.gov.au Минздрав Австралии
 ourworldindata.org Our World in Data`;
 
-let cfg = Object.assign({ pixabay: '', pexels: '', lang: 'ru', off: {}, sitesOff: {}, sites: DEFAULT_SITES, freeOnly: true, reviewsOnly: false }, store.get('cfg', {}));
+const DEFAULT_WORKER = ''; // можно вписать адрес Worker сюда, тогда вводить его в настройках не придётся
+let cfg = Object.assign({ pixabay: '', pexels: '', lang: 'ru', off: {}, sitesOff: {}, sites: DEFAULT_SITES, freeOnly: true, reviewsOnly: false, worker: DEFAULT_WORKER, token: '', smart: true }, store.get('cfg', {}));
 let recent = store.get('recent', []);
-let tab = 'info', sid = 0, current = [], ctx = { q: '', en: '' }, vtok = 0, viewerItem = null;
+let tab = 'info', sid = 0, current = [], ctx = { q: '', en: '', qs: [] }, vtok = 0, viewerItem = null;
 let lib = store.get('lib', null) || { cols: [{ id: 'c0', n: 'Без темы' }], items: [] };
 let libCol = 'all', libQuery = '', pendingKey = null;
 const reg = {};
+let secItems = {}, TR = store.get('tr', {}), ruOn = false, consCache = {}, scriptText = store.get('script', ''), brollKind = 'video', lastMode = '', fc = null, scenes = [], ssid = 0;
 
 const enc = encodeURIComponent;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -269,11 +316,80 @@ async function translate(q) {
 }
 
 /* ---------- Источники ---------- */
-const PT = {
-  'Meta-Analysis': ['Мета-анализ', 'g'], 'Systematic Review': ['Системный обзор', 'g'],
-  'Practice Guideline': ['Рекомендации', 'g'], 'Guideline': ['Рекомендации', 'g'],
-  'Randomized Controlled Trial': ['РКИ', 'b'], 'Review': ['Обзор', 'b']
+const EV = {
+  'Meta-Analysis': ['🧩 Мета-анализ', 'g', 0, 'Объединяет результаты многих исследований: самый надёжный уровень'],
+  'Systematic Review': ['📚 Системный обзор', 'g', 0, 'Строгий сбор и оценка всех исследований по вопросу'],
+  'Practice Guideline': ['📋 Рекомендации', 'g', 0, 'Клинические рекомендации экспертов'],
+  'Guideline': ['📋 Рекомендации', 'g', 0, 'Клинические рекомендации экспертов'],
+  'Randomized Controlled Trial': ['🎲 РКИ', 'b', 1, 'Рандомизированное контролируемое испытание: лучший дизайн для проверки причины и следствия'],
+  'Observational Study': ['👁 Обсервационное', 'o', 2, 'Наблюдение без вмешательства: показывает связь, но не доказывает причину'],
+  'Review': ['📖 Обзор', 'b', 3, 'Обзор литературы без строгой методики'],
+  'Case Reports': ['📝 Описание случая', 'w', 4, 'Один или несколько пациентов: слабое доказательство'],
+  'Preprint': ['⚠️ Препринт', 'w', 4, 'Ещё не прошёл рецензирование'],
+  'Editorial': ['💬 Мнение', 'w', 4, 'Мнение автора, не исследование'],
+  'Comment': ['💬 Мнение', 'w', 4, 'Мнение автора, не исследование'],
+  'Letter': ['💬 Мнение', 'w', 4, 'Мнение автора, не исследование'],
+  'News': ['💬 Мнение', 'w', 4, 'Новость или мнение, не исследование']
 };
+['Clinical Trial', 'Controlled Clinical Trial', 'Pragmatic Clinical Trial', 'Equivalence Trial', 'Clinical Trial, Phase I', 'Clinical Trial, Phase II', 'Clinical Trial, Phase III', 'Clinical Trial, Phase IV']
+  .forEach(k => { EV[k] = ['🧪 Клин. испытание', 'b', 2, 'Испытание на людях без полной рандомизации или с ранней фазой']; });
+const MESH_OBS = /^(Cohort Studies|Case-Control Studies|Cross-Sectional Studies|Longitudinal Studies|Prospective Studies|Retrospective Studies|Follow-Up Studies|Observational Study)$/i;
+
+function evidence(types, mesh) {
+  mesh = mesh || [];
+  const seen = {}, badges = [];
+  let rank = 5;
+  const add = k => { const e = EV[k]; if (e && !seen[e[0]]) { seen[e[0]] = 1; badges.push([e[0], e[1], e[3]]); rank = Math.min(rank, e[2]); } };
+  (types || []).forEach(add);
+  if (mesh.some(m => MESH_OBS.test(m))) add('Observational Study');
+  const human = mesh.includes('Humans');
+  if (mesh.includes('Animals') && !human) { badges.push(['🐭 Животные', 'w', 'Исследование на животных: на людей напрямую не переносится']); rank = 4; }
+  if (mesh.includes('In Vitro Techniques') && !human) { badges.push(['🧫 In vitro', 'w', 'Опыт в пробирке или на клетках']); rank = 4; }
+  return { badges, rank };
+}
+
+async function getText(url) {
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), 12000);
+  try {
+    const r = await fetch(url, { signal: c.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.text();
+  } finally { clearTimeout(t); }
+}
+
+// Аннотации, типы публикации и MeSH-термины из PubMed (нужны для значков надёжности и пересказа)
+async function efetch(ids) {
+  const xml = new DOMParser().parseFromString(await getText(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=${ids.join(',')}`), 'text/xml');
+  const out = {};
+  xml.querySelectorAll('PubmedArticle').forEach(a => {
+    const node = a.querySelector('MedlineCitation > PMID');
+    if (!node) return;
+    out[node.textContent] = {
+      abs: [...a.querySelectorAll('Abstract > AbstractText')].map(n => { const l = n.getAttribute('Label'); return (l ? l + ': ' : '') + n.textContent; }).join(' '),
+      pts: [...a.querySelectorAll('PublicationType')].map(n => n.textContent),
+      mesh: [...a.querySelectorAll('MeshHeading > DescriptorName')].map(n => n.textContent)
+    };
+  });
+  return out;
+}
+
+async function epmc(query, n) {
+  const d = await getJSON(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${enc(query)}&format=json&pageSize=${n}&resultType=core`);
+  return ((d.resultList && d.resultList.result) || []).map(r => {
+    const pts = (r.pubTypeList && r.pubTypeList.pubType) || [];
+    const mesh = ((r.meshHeadingList && r.meshHeadingList.meshHeading) || []).map(m => m.descriptorName);
+    const ev = evidence(pts, mesh);
+    return { title: strip(r.title), text: r.citedByCount ? 'цитирований: ' + r.citedByCount : '', abs: strip(r.abstractText), badges: ev.badges, rank: ev.rank, journal: r.journalTitle || '', year: r.pubYear, url: `https://europepmc.org/article/${r.source}/${r.id}`, meta: 'europepmc.org' };
+  });
+}
+
+async function wikiEn(q, n) {
+  const d = await getJSON(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${enc(q)}&gsrlimit=${n}&prop=extracts&exintro=1&explaintext=1&exsentences=4&format=json&origin=*`);
+  return Object.values((d.query && d.query.pages) || {}).sort((a, b) => a.index - b.index).map(p => ({
+    title: p.title, text: p.extract, abs: p.extract, badges: [['📖 Энциклопедия', '', 'Википедия: не первичный источник']], rank: 6, url: `https://en.wikipedia.org/?curid=${p.pageid}`, meta: 'en.wikipedia.org'
+  }));
+}
 
 const commons = (en, filter, type) => getJSON(
   `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${enc(en + ' ' + filter)}&gsrlimit=40&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=500&format=json&origin=*`
@@ -311,20 +427,18 @@ const SOURCES = {
       const s = await getJSON(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=8&sort=relevance&term=${enc(term)}`);
       const ids = (s.esearchresult && s.esearchresult.idlist) || [];
       if (!ids.length) return [];
-      const d = await getJSON(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
+      const [d, x] = await Promise.all([
+        getJSON(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`),
+        efetch(ids).catch(() => ({}))
+      ]);
       return ids.map(id => d.result[id]).filter(Boolean).map(r => {
-        const seen = {}, badges = [];
-        (r.pubtype || []).forEach(t => { if (PT[t] && !seen[PT[t][0]]) { seen[PT[t][0]] = 1; badges.push(PT[t]); } });
-        return { title: strip(r.title), text: [(r.authors || []).slice(0, 3).map(a => a.name).join(', '), r.source].filter(Boolean).join(' · '), badges, year: (r.pubdate || '').slice(0, 4), url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, meta: 'pubmed.ncbi.nlm.nih.gov' };
+        const e = x[r.uid] || {};
+        const ev = evidence(e.pts || r.pubtype, e.mesh);
+        return { title: strip(r.title), text: (r.authors || []).slice(0, 3).map(a => a.name).join(', '), abs: e.abs || '', badges: ev.badges, rank: ev.rank, journal: r.fulljournalname || r.source || '', year: (r.pubdate || '').slice(0, 4), url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, meta: 'pubmed.ncbi.nlm.nih.gov' };
       }).sort((a, b) => lvl(a) - lvl(b));
     } },
-    { id: 'epmc', label: 'Europe PMC', ico: '📚', t: '#12a594', run: async (q, en) => {
-      const query = `(${en}) AND OPEN_ACCESS:y AND (SRC:MED OR SRC:PMC)`;
-      const d = await getJSON(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${enc(query)}&format=json&pageSize=8&resultType=lite`);
-      return ((d.resultList && d.resultList.result) || []).map(r => ({
-        title: strip(r.title), text: [r.journalTitle, r.citedByCount ? 'цитирований: ' + r.citedByCount : ''].filter(Boolean).join(' · '), badges: [['Полный текст', 't']], year: r.pubYear, url: `https://europepmc.org/article/${r.source}/${r.id}`, meta: 'europepmc.org'
-      }));
-    } }
+    { id: 'epmc', label: 'Europe PMC', ico: '📚', t: '#12a594', run: async (q, en) =>
+      (await epmc(`(${en}) AND OPEN_ACCESS:y AND (SRC:MED OR SRC:PMC)`, 8)).map(it => { it.badges = it.badges.concat([['📄 Полный текст', 't', 'Статья в открытом доступе']]); return it; }) }
   ],
   image: [
     { id: 'openverse', label: 'Openverse', run: async (q, en) => {
@@ -382,7 +496,7 @@ const LINKS = {
 const inLib = k => lib.items.some(i => i.k === k);
 const starBtn = k => `<button type="button" class="star ${inLib(k) ? 'on' : ''}" data-k="${esc(k)}" aria-label="В подборку">${inLib(k) ? '★' : '☆'}</button>`;
 const regm = it => { const k = it.page || it.full || it.embed; it.k = k; reg[k] = it; return k; };
-const lvl = it => (it.badges || []).some(b => b[1] === 'g') ? 0 : (it.badges || []).some(b => b[0] === 'РКИ') ? 1 : (it.badges || []).length ? 2 : 3;
+const lvl = it => it.rank == null ? 6 : it.rank;
 const keyless = () => { const q = ctx.en || ctx.q, e = enc(q); return `<section class="card grad"><div class="sh"><span class="ico">🎬</span><h2>Pexels и Pixabay без ключей</h2></div><p class="gp">Без ключа их выдачу не встроить в апп. Открой поиск, выбери ролик и добавь его в «Моё» по ссылке (⭐ вверху).</p><a class="bigbtn" data-ext href="https://www.pexels.com/search/videos/${e}/">Pexels: ${esc(q)}</a><a class="bigbtn" data-ext href="https://pixabay.com/videos/search/${e}/">Pixabay: ${esc(q)}</a></section>`; };
 
 function saveLib() {
@@ -463,19 +577,26 @@ function renderLib() {
 
 /* ---------- Интерфейс ---------- */
 function renderChips() {
+  $('#form').hidden = tab === 'script';
+  if (tab === 'script') $('#enform').hidden = true;
   let h = (SOURCES[tab] || []).map(s => {
     const locked = s.key && !cfg[s.key];
     const on = !locked && !cfg.off[s.id];
     return `<button type="button" class="chip ${on ? 'on' : ''} ${locked ? 'lock' : ''}" data-id="${s.id}">${locked ? '🔒 ' : ''}${s.label}</button>`;
   }).join('');
-  if (tab === 'lib') h = '';
-  else if (tab === 'info') h += `<button type="button" class="chip tog ${cfg.reviewsOnly ? 'on' : ''}" data-t="reviewsOnly">Только обзоры (PubMed)</button>`;
-  else h += `<button type="button" class="chip tog ${cfg.freeOnly ? 'on' : ''}" data-t="freeOnly">Свободные лицензии</button>`;
+  if (tab === 'lib' || tab === 'script') h = '';
+  else {
+    h += tab === 'info'
+      ? `<button type="button" class="chip tog ${cfg.reviewsOnly ? 'on' : ''}" data-t="reviewsOnly">Только обзоры (PubMed)</button>`
+      : `<button type="button" class="chip tog ${cfg.freeOnly ? 'on' : ''}" data-t="freeOnly">Свободные лицензии</button>`;
+    if (cfg.worker) h += `<button type="button" class="chip tog ${cfg.smart ? 'on' : ''}" data-t="smart">✨ Умный поиск</button>`;
+  }
   $('#chips').innerHTML = h;
 }
 
 function renderHome() {
   if (tab === 'lib') return renderLib();
+  if (tab === 'script') return renderScript();
   const tips = {
     info: ['Научные базы понимают английский', 'Пиши по-русски: запрос сам переведётся для PubMed и Europe PMC. Перевод можно поправить под строкой поиска.'],
     image: ['Ищи по сути кадра', 'Короткие запросы работают лучше длинных: «микроскоп», «клетки крови», «вакцинация».'],
@@ -503,16 +624,10 @@ function linksBlock() {
   return `<div class="card links">Искать ещё: ${LINKS[tab](ctx.en || ctx.q).map(([n, u]) => `<a data-ext href="${esc(u)}">${n}</a>`).join('')}</div>`;
 }
 
-function itemHTML(it) {
-  const pills = (it.retracted ? '<span class="pill r">Отозвана</span>' : '') + (it.used ? '<span class="pill t">Использовано</span>' : '') + (it.badges || []).map(b => `<span class="pill ${b[1]}">${esc(b[0])}</span>`).join('') + (it.year ? `<span class="pill">${esc(it.year)}</span>` : '');
-  reg[it.url] = it;
-  return `<div class="item row"><a class="ia" data-ext href="${safe(it.url)}">${it.thumb ? `<img loading="lazy" src="${safe(it.thumb)}" alt="">` : ''}<div class="ib"><b>${esc(it.title)}</b>${it.text ? `<p>${esc(it.text)}</p>` : ''}<div class="pills">${pills}<span class="src">${esc(it.meta || '')}</span></div></div></a>${starBtn(it.url)}</div>`;
-}
-
 function renderMedia(pending, errs) {
-  let html = tab === 'video' && (!cfg.pexels || !cfg.pixabay) ? keyless() : '';
+  let html = (cfg.smart && cfg.worker && ctx.qs && ctx.qs.length > 1 ? `<p class="err">✨ Ищу: ${ctx.qs.slice(0, 3).map(esc).join(' · ')}</p>` : '') + (tab === 'video' && (!cfg.pexels || !cfg.pixabay) ? keyless() : '');
   if (current.length) {
-    html += `<div class="grid">${current.map((it, i) => `<div class="m" data-i="${i}"><img loading="lazy" src="${safe(it.thumb)}" alt="">${it.lic ? `<b class="lic">${esc(it.lic)}</b>` : ''}${it.type !== 'image' ? '<i class="play">▶</i>' : ''}<span>${esc(it.title)}</span>${starBtn(regm(it))}</div>`).join('')}</div>`;
+    html += `<div class="grid">${current.map((it, i) => thumbHTML(it, i)).join('')}</div>`;
   }
   if (pending > 0) html += '<div class="spin">Ищу ещё…</div>';
   else if (!current.length) html += '<div class="card"><p class="note">Ничего не нашлось. Попробуй другие слова или включи другой источник.</p></div>';
@@ -521,57 +636,383 @@ function renderMedia(pending, errs) {
   $('#results').innerHTML = html;
 }
 
+const STANCE = { supports: ['Подтверждает', 'g'], contradicts: ['Противоречит', 'r'], related: ['По теме', ''] };
+
+function itemHTML(it) {
+  const tr = ruOn && TR[it.url];
+  const title = tr && tr.t ? tr.t : it.title;
+  const text = tr && tr.s ? tr.s : it.text;
+  const st = it.stance && STANCE[it.stance] ? `<span class="pill ${STANCE[it.stance][1]}">${STANCE[it.stance][0]}</span>` : '';
+  const pills = (it.retracted ? '<span class="pill r">Отозвана</span>' : '') + (it.used ? '<span class="pill t">Использовано</span>' : '') + st +
+    (it.badges || []).map(b => `<span class="pill ${b[1]}"${b[2] ? ` title="${esc(b[2])}"` : ''}>${esc(b[0])}</span>`).join('') +
+    (it.journal ? `<span class="pill j" title="Журнал">📰 ${esc(it.journal)}</span>` : '') +
+    (it.year ? `<span class="pill">${esc(it.year)}</span>` : '');
+  reg[it.url] = it;
+  return `<div class="item row"><a class="ia" data-ext href="${safe(it.url)}">${it.thumb ? `<img loading="lazy" src="${safe(it.thumb)}" alt="">` : ''}<div class="ib"><b>${esc(title)}</b>${text ? `<p>${esc(text)}</p>` : ''}${it.sum ? `<p class="sum">✨ ${esc(it.sum)}</p>` : ''}${it.why ? `<p class="sum">${esc(it.why)}</p>` : ''}<div class="pills">${pills}<span class="src">${esc(it.meta || '')}</span></div></div></a>${starBtn(it.url)}</div>`;
+}
+
+const secHTML = items => items.length ? items.map(itemHTML).join('') : '<p class="err">Ничего не нашлось.</p>';
+function repaintInfo() {
+  Object.keys(secItems).forEach(k => { const b = document.querySelector(`#sec-${k} .body`); if (b) b.innerHTML = secHTML(secItems[k]); });
+}
+const relv = it => it.rel == null ? 1.5 : it.rel;
+
+async function smartInfo(id) {
+  const all = Object.entries(secItems).flatMap(([s, arr]) => arr.map(it => ({ it, s })));
+  if (!all.length) return;
+  const stat = $('#rankstat');
+  if (stat) stat.textContent = '✨ Ранжирую и пересказываю…';
+  try {
+    const d = await api('rank', { query: ctx.q, summarize: true, items: all.map(({ it, s }, i) => ({ id: String(i), src: s, title: it.title, text: isRu(it.text) ? '' : (it.abs || it.text || '').slice(0, 800) })) });
+    if (id !== sid) return;
+    all.forEach(({ it }, i) => { it.rel = d.rel && d.rel[i] != null ? +d.rel[i] : null; it.sum = (d.sum && d.sum[i]) || ''; });
+    Object.keys(secItems).forEach(s => {
+      secItems[s] = secItems[s].map((it, i) => [it, i]).sort((a, b) => (relv(b[0]) - relv(a[0])) || (lvl(a[0]) - lvl(b[0])) || (a[1] - b[1])).map(x => x[0]);
+    });
+    repaintInfo();
+    if (stat) stat.textContent = '';
+  } catch (e) { if (id === sid && stat) stat.textContent = 'Умное ранжирование недоступно: ' + e.message; }
+}
+async function afterInfo(id) {
+  if (cfg.smart && cfg.worker) await smartInfo(id);
+  if (id !== sid) return;
+  if (ruOn) { await ensureTr(id); if (id === sid) repaintInfo(); }
+}
+
+async function smartMedia(id, errs) {
+  if (current.length < 2) return;
+  const list = current.slice(0, 60);
+  try {
+    const d = await api('rank', { query: ctx.q, summarize: false, items: list.map((it, i) => ({ id: String(i), src: it.meta, title: it.title })) });
+    if (id !== sid) return;
+    list.forEach((it, i) => { it.rel = d.rel && d.rel[i] != null ? +d.rel[i] : 1.5; });
+    current = list.map((it, i) => [it, i]).sort((a, b) => (b[0].rel - a[0].rel) || (a[1] - b[1])).map(x => x[0]).concat(current.slice(60));
+    renderMedia(0, errs);
+  } catch (e) {}
+}
+
 async function search(q, enOverride) {
   q = (q || '').trim();
   if (tab === 'lib') { libQuery = q; renderLib(); return; }
-  if (!q) return;
+  if (tab === 'script' || !q) return;
   recent = [q, ...recent.filter(r => r !== q)].slice(0, 8);
   store.set('recent', recent);
   $('#q').blur();
   const id = ++sid;
   const res = $('#results');
-  res.innerHTML = '<div class="spin">Ищу…</div>';
+  const smartOn = !!(cfg.smart && cfg.worker);
+  res.innerHTML = `<div class="spin">${smartOn ? 'Понимаю запрос…' : 'Ищу…'}</div>`;
 
   const cyr = /[а-яёіїє]/i.test(q);
-  let en = q;
-  if (enOverride && enOverride.trim()) en = enOverride.trim();
-  else if (cyr) {
-    if (ctx.q === q && ctx.en) en = ctx.en;
-    else { try { en = await translate(q); } catch (e) { en = q; } }
+  const ov = (enOverride || '').trim();
+  const keep = ov && (!smartOn || ov !== ctx.en || (ctx.q === q && ctx.manual));
+  let en = '', qs = [], disputed = false;
+  if (keep) { en = ov; qs = [ov]; }
+  else if (smartOn) {
+    if (ctx.q === q && ctx.tab === tab && ctx.qs && ctx.qs.length) ({ en, qs, disputed } = ctx);
+    else {
+      try { const s = await api('smart', { text: q, tab }); qs = (s.queries || []).filter(Boolean).slice(0, 4); en = qs[0] || ''; disputed = !!s.disputed; } catch (e) {}
+    }
+  }
+  if (!en) {
+    en = q;
+    if (cyr) {
+      if (ctx.q === q && ctx.en && !smartOn) en = ctx.en;
+      else { try { en = await translate(q); } catch (e) { en = q; } }
+    }
+    qs = [en];
   }
   if (id !== sid) return;
-  ctx = { q, en };
-  $('#enform').hidden = !cyr;
+  ctx = { q, en, qs, disputed, tab, manual: !!keep };
+  $('#enform').hidden = !(cyr || smartOn);
   $('#qen').value = en;
 
   const srcs = SOURCES[tab].filter(s => !(s.key && !cfg[s.key]) && !cfg.off[s.id]);
   current = [];
+  secItems = {};
 
   if (tab === 'info') {
-    res.innerHTML = sitesHTML() + srcs.map(s => `<section class="card tint" style="--t:${s.t}" id="sec-${s.id}"><div class="sh"><span class="ico">${s.ico}</span><h2>${s.label}</h2></div><div class="body"><div class="spin">Загружаю…</div></div></section>`).join('') + linksBlock();
+    res.innerHTML = '<p class="err" id="rankstat"></p>' + trBar() + consHTML() + sitesHTML() +
+      srcs.map(s => `<section class="card tint" style="--t:${s.t}" id="sec-${s.id}"><div class="sh"><span class="ico">${s.ico}</span><h2>${s.label}</h2></div><div class="body"><div class="spin">Загружаю…</div></div></section>`).join('') + linksBlock();
+    let left = srcs.length;
     srcs.forEach(async s => {
       let html;
       try {
         const items = (await s.run(q, en)).filter(x => x.title);
-        html = items.length ? items.map(itemHTML).join('') : '<p class="err">Ничего не нашлось.</p>';
+        secItems[s.id] = items;
+        html = secHTML(items);
       } catch (e) { html = '<p class="err">Источник не ответил. Попробуй ещё раз позже.</p>'; }
       if (id !== sid) return;
       const body = document.querySelector(`#sec-${s.id} .body`);
       if (body) body.innerHTML = html;
+      if (--left === 0) afterInfo(id);
     });
+    if (ctx.disputed && cfg.worker) runConsensus();
     return;
   }
 
   if (!srcs.length) { res.innerHTML = '<div class="card"><p class="note">Включи хотя бы один источник или добавь ключ в настройках.</p></div>' + linksBlock(); return; }
-  let pending = srcs.length;
-  const errs = [];
-  srcs.forEach(async s => {
-    try { const items = await s.run(q, en); if (id === sid) current.push(...items); }
-    catch (e) { errs.push(s.label); }
+  const qlim = smartOn ? Math.min(3, ctx.qs.length) : 1;
+  const runs = [];
+  srcs.forEach(s => ctx.qs.slice(0, qlim).forEach(qq => runs.push([s, qq])));
+  let pending = runs.length;
+  const errs = [], seenK = new Set();
+  runs.forEach(async ([s, qq]) => {
+    try {
+      const items = await s.run(q, qq);
+      if (id === sid) items.forEach(it => { const k = it.page || it.full || it.embed; if (!seenK.has(k)) { seenK.add(k); current.push(it); } });
+    } catch (e) { if (!errs.includes(s.label)) errs.push(s.label); }
     if (id !== sid) return;
     pending--;
     renderMedia(pending, errs);
+    if (pending === 0 && smartOn) smartMedia(id, errs);
   });
+}
+
+/* ---------- Worker: умный поиск, перевод, сценарий, подписки ---------- */
+async function api(path, body, method) {
+  if (!cfg.worker) throw new Error('NO_WORKER');
+  const h = { 'Content-Type': 'application/json' };
+  if (tg && tg.initData) h['X-Init-Data'] = tg.initData;
+  if (cfg.token) h['X-App-Token'] = cfg.token;
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 90000);
+  try {
+    const r = await fetch(cfg.worker.replace(/\/+$/, '') + '/api/' + path, { method: method || 'POST', headers: h, body: method === 'GET' ? undefined : JSON.stringify(body || {}), signal: c.signal });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+    return d;
+  } finally { clearTimeout(t); }
+}
+function needWorker() { toast('Укажи адрес Worker в настройках'); openSheet(); }
+const errCard = e => e && e.message === 'NO_WORKER'
+  ? '<div class="card"><p class="note">Для этого нужен Worker. Укажи его адрес в настройках (⚙️).</p></div>'
+  : `<div class="card"><p class="note">Не получилось: ${esc(e && e.message)}</p></div>`;
+async function pool(items, n, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (i < items.length) { const it = items[i++]; try { await fn(it); } catch (e) {} }
+  }));
+}
+const isRu = s => /[а-яё]/i.test(s || '');
+
+/* ---------- Перевод выдачи ---------- */
+const saveTr = () => { const ks = Object.keys(TR); if (ks.length > 300) ks.slice(0, ks.length - 300).forEach(k => delete TR[k]); store.set('tr', TR); };
+const trLabel = () => ruOn ? '↩ Показать оригинал' : '🌐 Перевести выдачу на русский';
+const trBar = () => `<div class="lbar" style="margin:0 0 4px"><button type="button" id="trbtn" data-do="tr">${trLabel()}</button></div>`;
+async function ensureTr(id) {
+  const need = Object.values(secItems).flat().filter(it => !TR[it.url] && !isRu(it.title));
+  if (!need.length) return;
+  const st = $('#rankstat');
+  if (st) st.textContent = '🌐 Перевожу…';
+  try {
+    const d = await api('translate', { items: need.slice(0, 40).map(it => ({ id: it.url, title: it.title, text: it.abs || it.text || '' })) });
+    if (id !== sid) return;
+    Object.assign(TR, d.tr || {});
+    saveTr();
+  } catch (e) { toast('Перевод не удался'); }
+  if (st) st.textContent = '';
+}
+async function doTranslate() {
+  if (!cfg.worker) return needWorker();
+  ruOn = !ruOn;
+  const b = $('#trbtn'); if (b) b.textContent = trLabel();
+  if (ruOn) await ensureTr(sid);
+  repaintInfo();
+}
+
+/* ---------- ВОЗ · NHS · Cochrane ---------- */
+const CONS_STANCE = { confirms: ['Подтверждает', 'g'], refutes: ['Не подтверждает', 'r'], mixed: ['Неоднозначно', 'o'], no_position: ['Позиции нет', ''] };
+function consBody() {
+  const q = ctx.en || ctx.q;
+  const links = [['ВОЗ', 'who.int'], ['NHS', 'nhs.uk'], ['Cochrane', 'cochranelibrary.com']].map(([n, d]) => `<a data-ext href="${esc('https://www.google.com/search?q=' + enc('site:' + d + ' ' + q))}">${n} ↗</a>`).join('');
+  const d = consCache[q];
+  if (d) return d.orgs.map(o => {
+    const s = CONS_STANCE[o.stance] || CONS_STANCE.no_position;
+    return `<div class="org"><div class="orgh"><b>${esc(o.org)}</b>${o.found ? `<span class="pill ${s[1]}">${s[0]}</span>` : '<span class="pill">Не нашёл</span>'}</div>${o.found ? `<p>${esc(o.summary_ru)}</p><a data-ext href="${safe(o.url)}">Открыть страницу ↗</a>` : '<p class="err">На сайте нет страницы по этой теме.</p>'}</div>`;
+  }).join('') + '<p class="err">Краткий пересказ найденных страниц. Сверяй формулировки по ссылке.</p>';
+  if (!cfg.worker) return `<p class="err" style="margin:8px 0">Откроет поиск Google по сайту каждой организации. Чтобы позиции пересказывались здесь, подключи Worker.</p><div class="links">${links}</div>`;
+  return `<p class="err" style="margin:8px 0">Для спорных тем: что говорит каждая организация.</p><div class="lbar" style="margin-top:8px"><button type="button" data-do="cons">Сверить позиции</button></div><div class="links" style="margin-top:10px">${links}</div>`;
+}
+const consHTML = () => `<section class="card" id="cons"><div class="sh"><span class="ico" style="--t:#d97706">⚖️</span><h2>ВОЗ · NHS · Cochrane</h2></div><div id="consbody">${consBody()}</div></section>`;
+async function runConsensus() {
+  const box = $('#consbody');
+  if (!box) return;
+  if (!cfg.worker) return needWorker();
+  const q = ctx.en || ctx.q, id = sid;
+  box.innerHTML = '<div class="spin">Смотрю ВОЗ, NHS и Cochrane…</div>';
+  try {
+    consCache[q] = consCache[q] || await api('consensus', { topic_en: q, topic_ru: ctx.q });
+    if (id !== sid) return;
+  } catch (e) { if (id === sid) box.innerHTML = `<p class="err">Не получилось: ${esc(e.message)}</p>`; return; }
+  box.innerHTML = consBody();
+}
+
+/* ---------- Вкладка «Сценарий» ---------- */
+function renderScript() {
+  $('#results').innerHTML = `<section class="card"><div class="sh"><span class="ico" style="--t:#6f55e6">📝</span><h2>Сценарий</h2></div>
+    <textarea id="script" class="ta" spellcheck="false" placeholder="Вставь текст сценария: проверю факты и подберу кадры по сценам">${esc(scriptText)}</textarea>
+    <div class="lbar"><button type="button" class="go" data-do="fact">✅ Проверить факты</button><button type="button" class="go" data-do="broll">🎞 Подобрать b-roll</button></div>
+    <div class="chips" style="padding:12px 0 0"><button type="button" class="chip ${brollKind === 'video' ? 'on' : ''}" data-do="bk" data-v="video">Видео</button><button type="button" class="chip ${brollKind === 'image' ? 'on' : ''}" data-do="bk" data-v="image">Фото</button></div>
+    <p class="err">Кадры берутся из источников вкладок «Видео» и «Картинки» с твоими фильтрами и ключами.</p></section><div id="scriptout"></div>`;
+  if (lastMode === 'fact' && fc) paintFact(); else if (lastMode === 'broll' && scenes.length) paintBroll();
+}
+
+const VERD = { ok: ['Подтверждено', 'g'], part: ['Частично', 'o'], contra: ['Противоречит источникам', 'r'], none: ['Нет источника', 'r'], wait: ['Ищу источники…', ''], op: ['Мнение', ''] };
+const vkey = c => !c.checkable ? 'op' : !c.verdict ? 'wait' : ({ supported: 'ok', partial: 'part', contradicted: 'contra' }[c.verdict] || 'none');
+function locate(text, quote) {
+  const i = text.indexOf(quote);
+  if (i >= 0) return [i, i + quote.length];
+  try {
+    const m = new RegExp(quote.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')).exec(text);
+    if (m) return [m.index, m.index + m[0].length];
+  } catch (e) {}
+  return null;
+}
+function claimCard(c) {
+  const k = vkey(c), v = VERD[k];
+  const notes = c.notes || [];
+  const shown = (c.cands || []).map((x, i) => ({ x, n: notes.find(n => n.i === i) })).filter(o => !o.n || o.n.stance !== 'unrelated');
+  const body = shown.length
+    ? `<div class="body">${shown.map(o => itemHTML(Object.assign({}, o.x, { stance: o.n && o.n.stance, why: o.n && o.n.why }))).join('')}</div>`
+    : (k === 'wait' ? '' : `<p class="err">Подходящих источников не нашлось. <a data-ext href="${esc('https://scholar.google.com/scholar?q=' + enc(c.query_en || c.claim_en || c.quote))}" style="color:var(--primary);font-weight:700">Искать вручную ↗</a></p>`);
+  return `<div class="cl" id="cl-${c.id}"><div class="clh"><span class="pill ${v[1]}">${v[0]}</span><b>${esc(c.quote)}</b></div>${body}</div>`;
+}
+function paintFact() {
+  lastMode = 'fact';
+  const out = $('#scriptout');
+  if (!out || !fc) return;
+  const { text, claims } = fc;
+  claims.forEach(c => { c.range = locate(text, c.quote); });
+  const placed = claims.filter(c => c.range).sort((a, b) => a.range[0] - b.range[0]);
+  let pos = 0, h = '';
+  placed.forEach(c => {
+    if (c.range[0] < pos) return;
+    h += esc(text.slice(pos, c.range[0])) + `<mark class="mk ${vkey(c)}" data-cl="${c.id}">${esc(text.slice(c.range[0], c.range[1]))}</mark>`;
+    pos = c.range[1];
+  });
+  h += esc(text.slice(pos));
+  const n = k => claims.filter(c => vkey(c) === k).length;
+  const total = claims.filter(c => c.checkable).length;
+  const order = claims.filter(c => c.checkable).sort((a, b) => (a.range ? a.range[0] : 1e9) - (b.range ? b.range[0] : 1e9));
+  out.innerHTML = `<section class="card"><div class="sh"><span class="ico" style="--t:#25b05f">✅</span><h2>Проверка фактов</h2></div>
+    <p class="err" style="margin:8px 0 0">Утверждений: ${total}. Подтверждено ${n('ok')}, частично ${n('part')}, противоречат ${n('contra')}, без источника ${n('none')}${n('wait') ? ', ещё ищу ' + n('wait') : ''}.</p>
+    <div class="legend"><span class="pill g">Подтверждено</span><span class="pill o">Частично</span><span class="pill r">Нет источника / противоречит</span><span class="pill">Мнение</span></div>
+    <div class="scr">${h}</div></section>
+    <section class="card">${order.length ? order.map(claimCard).join('') : '<p class="note">Проверяемых утверждений не нашлось.</p>'}<p class="err">Вердикт строится по аннотациям, а не по полным текстам. Перед публикацией открой источник.</p></section>`;
+}
+function jumpClaim(id) {
+  const el = document.getElementById('cl-' + id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+async function findSupport(c) {
+  const q = c.query_en || c.claim_en, out = [], jobs = [];
+  if (c.domain !== 'other') jobs.push(epmc(`(${q}) AND SRC:MED`, 4).then(r => out.push(...r)).catch(() => {}));
+  jobs.push(wikiEn(q, c.domain === 'other' ? 3 : 1).then(r => out.push(...r)).catch(() => {}));
+  await Promise.all(jobs);
+  return out;
+}
+async function runFact() {
+  if (!cfg.worker) return needWorker();
+  const text = scriptText.trim();
+  if (text.length < 40) return toast('Вставь текст сценария');
+  const out = $('#scriptout'), my = ++ssid;
+  out.innerHTML = '<div class="spin">Выделяю утверждения…</div>';
+  let claims;
+  try { claims = ((await api('claims', { script: text.slice(0, 12000) })).claims || []).filter(c => c.quote).slice(0, 20); }
+  catch (e) { if (my === ssid) out.innerHTML = errCard(e); return; }
+  if (my !== ssid) return;
+  fc = { text: text.slice(0, 12000), claims };
+  paintFact();
+  await pool(claims.filter(c => c.checkable), 4, async c => {
+    c.cands = await findSupport(c);
+    if (my !== ssid) return;
+    if (!c.cands.length) c.verdict = 'none';
+    paintFact();
+  });
+  if (my !== ssid) return;
+  const items = claims.filter(c => c.checkable && c.cands && c.cands.length).map(c => ({
+    id: c.id, claim: c.claim_en || c.quote,
+    cands: c.cands.map((x, i) => ({ i, title: x.title, text: (x.abs || x.text || '').slice(0, 650), kind: (x.badges || []).map(b => b[0]).join(', ') }))
+  }));
+  if (items.length) {
+    try {
+      const v = (await api('verify', { items })).res || {};
+      if (my !== ssid) return;
+      claims.forEach(c => { const r = v[c.id]; if (r) { c.verdict = r.verdict; c.notes = r.notes || []; } });
+    } catch (e) { toast('Не удалось оценить источники'); }
+  }
+  claims.forEach(c => { if (c.checkable && !c.verdict) c.verdict = 'none'; });
+  paintFact();
+}
+
+/* ---------- b-roll по сценам ---------- */
+const thumbHTML = (it, i, sc) => `<div class="m" ${sc != null ? `data-sc="${sc}" ` : ''}data-i="${i}"><img loading="lazy" src="${safe(it.thumb)}" alt="">${it.lic ? `<b class="lic">${esc(it.lic)}</b>` : ''}${it.type !== 'image' ? '<i class="play">▶</i>' : ''}<span>${esc(it.title)}</span>${starBtn(regm(it))}</div>`;
+const sceneThumbs = sc => sc.pending ? '<div class="spin">Ищу кадры…</div>' : (sc.items.length ? sc.items.map((it, i) => thumbHTML(it, i, sc.n)).join('') : '<p class="err">Ничего не нашлось. Нажми на запрос выше и поищи вручную.</p>');
+function paintScene(n) { const el = document.querySelector(`#scn-${n} .hs`); if (el) el.innerHTML = sceneThumbs(scenes[n]); }
+function paintBroll() {
+  lastMode = 'broll';
+  const out = $('#scriptout');
+  if (!out) return;
+  out.innerHTML = `<div class="lbar" style="margin-top:14px"><button type="button" data-do="copyq">Скопировать запросы</button></div>` + scenes.map(sc =>
+    `<section class="card scn" id="scn-${sc.n}"><div class="sh"><span class="ico" style="--t:#ef6a3c">${sc.n + 1}</span><h2>${esc(sc.title || 'Сцена ' + (sc.n + 1))}</h2></div>
+    <p class="err" style="margin:6px 0 0">${esc(sc.excerpt)}${sc.mood ? ' · ' + esc(sc.mood) : ''}</p>
+    <div class="recent" style="margin:8px 0">${sc.queries.map(q => `<button type="button" data-do="qgo" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <div class="hs">${sceneThumbs(sc)}</div></section>`).join('');
+}
+async function runBroll() {
+  if (!cfg.worker) return needWorker();
+  const text = scriptText.trim();
+  if (text.length < 40) return toast('Вставь текст сценария');
+  const out = $('#scriptout'), my = ++ssid;
+  out.innerHTML = '<div class="spin">Разбираю сценарий на сцены…</div>';
+  let list;
+  try { list = (await api('broll', { script: text.slice(0, 12000) })).scenes || []; }
+  catch (e) { if (my === ssid) out.innerHTML = errCard(e); return; }
+  if (my !== ssid) return;
+  const kind = brollKind;
+  const srcs = SOURCES[kind].filter(s => !(s.key && !cfg[s.key]) && !cfg.off[s.id]);
+  if (!srcs.length) { out.innerHTML = '<div class="card"><p class="note">Включи источники на вкладке «Видео» или «Картинки» либо добавь ключи в настройках.</p></div>'; return; }
+  scenes = list.map((s, i) => Object.assign({}, s, { n: i, items: [], pending: true }));
+  paintBroll();
+  await pool(scenes, 2, async sc => {
+    const lists = await Promise.all(srcs.map(async s => {
+      const arr = [];
+      for (const qq of sc.queries.slice(0, 2)) { try { arr.push(...await s.run(qq, qq)); } catch (e) {} }
+      return arr;
+    }));
+    const seen = new Set(), items = [];
+    for (let i = 0; items.length < 10 && lists.some(l => i < l.length); i++) {
+      lists.forEach(l => { const it = l[i], k = it && (it.page || it.full || it.embed); if (it && !seen.has(k) && items.length < 10) { seen.add(k); items.push(it); } });
+    }
+    sc.items = items; sc.pending = false;
+    if (my === ssid) paintScene(sc.n);
+  });
+}
+
+/* ---------- Подписки на свежие мета-анализы ---------- */
+const renderSubs = list => { $('#subs').innerHTML = list.length ? list.map(t => `<div class="subrow"><span>${esc(t.ru)}</span><button type="button" data-us="${esc(t.id)}" aria-label="Отписаться">✕</button></div>`).join('') : '<div class="help">Подписок пока нет.</div>'; };
+async function loadSubs() {
+  const box = $('#subs');
+  if (!cfg.worker) { box.innerHTML = '<div class="help">Сначала укажи адрес Worker и сохрани.</div>'; return; }
+  box.innerHTML = '<div class="help">Загружаю…</div>';
+  try { renderSubs((await api('subs', null, 'GET')).subs || []); } catch (e) { box.innerHTML = `<div class="help">${esc(e.message)}</div>`; }
+}
+
+function doAction(el) {
+  const a = el.dataset.do;
+  if (a === 'tr') return doTranslate();
+  if (a === 'cons') return runConsensus();
+  if (a === 'fact') return runFact();
+  if (a === 'broll') return runBroll();
+  if (a === 'bk') { brollKind = el.dataset.v; return renderScript(); }
+  if (a === 'copyq') return copyText(scenes.map((s, i) => `${i + 1}. ${s.title}: ${s.queries.join(' | ')}`).join('\n'), 'Запросы скопированы');
+  if (a === 'qgo') {
+    tab = brollKind; sid++;
+    document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === tab ? 'true' : 'false'));
+    $('#q').value = el.dataset.q; renderChips(); search(el.dataset.q);
+  }
 }
 
 /* ---------- Просмотр ---------- */
@@ -597,16 +1038,16 @@ async function openViewer(it) {
 function closeViewer() { vtok++; $('#viewer').classList.remove('open'); $('#stage').innerHTML = ''; }
 
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1600); }
-async function copyText(t) {
+async function copyText(t, msg) {
   try { await navigator.clipboard.writeText(t); }
   catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (_) {} a.remove(); }
-  toast('Источник скопирован');
+  toast(msg || 'Источник скопирован');
 }
 
 /* ---------- Настройки ---------- */
 function openSheet() {
-  $('#lang').value = cfg.lang; $('#k-pexels').value = cfg.pexels; $('#k-pixabay').value = cfg.pixabay; $('#sites').value = cfg.sites;
-  $('#sheet').classList.add('open');
+  $('#lang').value = cfg.lang; $('#k-pexels').value = cfg.pexels; $('#k-pixabay').value = cfg.pixabay; $('#sites').value = cfg.sites; $('#k-worker').value = cfg.worker || ''; $('#k-token').value = cfg.token || '';
+  $('#sheet').classList.add('open'); loadSubs();
 }
 
 /* ---------- События ---------- */
@@ -619,7 +1060,7 @@ $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') e.curr
 $('#sites-reset').addEventListener('click', () => { $('#sites').value = DEFAULT_SITES; });
 $('#save').addEventListener('click', () => {
   cfg.lang = $('#lang').value; cfg.pexels = $('#k-pexels').value.trim(); cfg.pixabay = $('#k-pixabay').value.trim();
-  cfg.sites = $('#sites').value.trim() || DEFAULT_SITES;
+  cfg.sites = $('#sites').value.trim() || DEFAULT_SITES; cfg.worker = $('#k-worker').value.trim(); cfg.token = $('#k-token').value.trim();
   store.set('cfg', cfg); $('#sheet').classList.remove('open'); renderChips();
   if ($('#q').value.trim()) search($('#q').value);
 });
@@ -630,6 +1071,7 @@ $('#tabs').addEventListener('click', e => {
   tab = b.dataset.tab; sid++;
   document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
   renderChips();
+  if (tab === 'script') return renderScript();
   if ($('#q').value.trim()) search($('#q').value, $('#enform').hidden ? '' : $('#qen').value); else renderHome();
 });
 
@@ -647,8 +1089,10 @@ $('#chips').addEventListener('click', e => {
 
 $('#results').addEventListener('click', e => {
   const st = e.target.closest('.star'); if (st) return toggleStar(st.dataset.k);
+  const dd = e.target.closest('[data-do]'); if (dd) return doAction(dd);
+  const mk = e.target.closest('.mk'); if (mk) return jumpClaim(mk.dataset.cl);
   const la = e.target.closest('[data-la]'); if (la) return libAction(la);
-  const m = e.target.closest('.m'); if (m) return openViewer(current[+m.dataset.i]);
+  const m = e.target.closest('.m'); if (m) return openViewer(m.dataset.sc != null ? scenes[+m.dataset.sc].items[+m.dataset.i] : current[+m.dataset.i]);
   const r = e.target.closest('[data-r]'); if (r) { $('#q').value = r.dataset.r; search(r.dataset.r); return; }
   const sc = e.target.closest('.sc');
   if (sc) {
@@ -667,6 +1111,15 @@ document.addEventListener('click', e => {
 $('#libbtn').addEventListener('click', () => { tab = 'lib'; sid++; document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', 'false')); renderChips(); renderLib(); });
 $('#savesheet').addEventListener('click', e => { if (e.target.id === 'savesheet') e.currentTarget.classList.remove('open'); const c = e.target.closest('[data-c]'); if (c) addTo(c.dataset.c); });
 $('#addcol').addEventListener('click', () => { const n = $('#newcol').value.trim(); if (!n) return; const id = 'c' + Date.now(); lib.cols.push({ id, n }); $('#newcol').value = ''; addTo(id); });
+$('#results').addEventListener('input', e => { if (e.target.id === 'script') { scriptText = e.target.value; store.set('script', scriptText); } });
+$('#addsub').addEventListener('click', async () => {
+  const t = $('#newsub').value.trim(); if (!t) return;
+  try { renderSubs((await api('subs', { topic: t })).subs || []); $('#newsub').value = ''; toast('Подписка добавлена'); } catch (e) { toast(e.message === 'NO_WORKER' ? 'Сначала укажи Worker' : e.message); }
+});
+$('#subs').addEventListener('click', async e => {
+  const b = e.target.closest('[data-us]'); if (!b) return;
+  try { renderSubs((await api('subs', { id: b.dataset.us }, 'DELETE')).subs || []); } catch (x) { toast(x.message); }
+});
 restoreLib();
 renderChips();
 renderHome();

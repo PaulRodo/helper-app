@@ -1,0 +1,18 @@
+name = "nauchpop-api"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# Куда Worker принимает запросы: адрес, где лежит твой апп (только origin, без пути)
+[vars]
+ALLOWED_ORIGIN = "https://paulrodo.github.io"
+ALLOWED_USER_IDS = "ВСТАВЬ_СВОЙ_TELEGRAM_ID"   # узнать: бот @userinfobot
+MODEL_FAST = "claude-haiku-5-5"
+MODEL_SMART = "claude-sonnet-5-5"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "ВСТАВЬ_ID_ПОСЛЕ_wrangler_kv_namespace_create"
+
+# Ежедневная рассылка свежих мета-анализов (09:00 по Москве = 06:00 UTC)
+[triggers]
+crons = ["0 6 * * *"]
